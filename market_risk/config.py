@@ -22,6 +22,7 @@ class PortfolioConfig:
     stress_scenarios: dict[str, dict[str, Any]]
     risk_limits: dict[str, float]
     workflow_assumptions: dict[str, Any]
+    frtb: dict[str, Any]
 
     @property
     def weights(self) -> dict[str, float]:
@@ -67,4 +68,5 @@ def load_config(path: str | Path) -> PortfolioConfig:
         stress_scenarios=raw.get("stress_scenarios", {}),
         risk_limits={key: float(value) for key, value in raw.get("risk_limits", {}).items()},
         workflow_assumptions=raw.get("workflow_assumptions", {}),
+        frtb=raw.get("frtb", {}),
     )

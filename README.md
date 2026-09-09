@@ -13,7 +13,7 @@ The deterministic demo run gives every result below from one command, so the cla
 | Core analytics | Approximately 1.5 seconds on the development machine |
 | Batch scenario valuation | 50,000 scenarios x 8 positions |
 | Vectorisation benchmark | More than 400x faster than the transparent Python row-loop baseline on the development machine |
-| Automated reporting | 22 CSV/SQL-ready tables and more than 8,000 rows per run |
+| Automated reporting | 25 CSV/SQL-ready tables and more than 8,000 rows per run |
 | Data controls | Raw completeness, freshness, source, validity, gaps, and imputation lineage |
 | Model validation | 4 models, 3 statistical tests, rolling 250-day traffic-light monitoring |
 | Risk monitoring | 9 configurable VaR, ES, and stress-limit tests |
@@ -50,6 +50,8 @@ The demo intentionally includes clustered shocks. GARCH-t passes unconditional c
 
 The largest configured stress is `offshore_funding_freeze`, with a net loss of A$120,750 against a A$125,000 limit. Position-level P&L separates gross loss contributors from the positive bond-proxy offset, and reverse stress shows the shock multiplier required to reach a A$100,000 loss threshold.
 
+The FRTB-inspired view reports A$273,262 of 97.5% liquidity-adjusted ES. The worst contiguous 250-observation calibration window runs from February 2021 to February 2022 and produces a 1.415 stress scalar, taking stress-scaled ES to A$386,601. These are method-demonstration outputs rather than regulatory capital figures.
+
 ## Architecture
 
 ```text
@@ -85,6 +87,7 @@ Yahoo Finance or deterministic demo prices
 - Configurable risk appetite limits with utilisation, headroom, and breach status.
 - Input/config SHA-256 hashes, run ID, data lineage dates, and pipeline version.
 - Cash-flow valuation for AUD fixed-rate bonds, AUD/USD forward mark-to-market, parallel and shaped curve scenarios, DV01, convexity, and key-rate DV01.
+- FRTB-inspired 97.5% ES with 10-day returns, prescribed liquidity-horizon aggregation, stress-window scaling, and an explicitly non-regulatory modellability proxy.
 
 The scope and regulatory limitations are documented in `docs/model_methodology.md`.
 
@@ -131,7 +134,7 @@ python -m market_risk.cli run --database-url postgresql+psycopg2://risk_user:ris
 
 ## Output pack
 
-Each run produces 22 database-ready tables, including `risk_summary`, `var_backtest`, `model_monitoring`, `model_performance`, `stress_results`, `stress_contributions`, `reverse_stress`, `component_var`, `risk_limits`, `data_quality`, `imputation_audit`, `treasury_positions`, `key_rate_dv01`, `treasury_scenarios`, `performance_benchmark`, `operational_efficiency`, and `run_manifest`. It also writes `reports/management_summary.md` for a risk-manager view.
+Each run produces 25 database-ready tables, including `risk_summary`, `var_backtest`, `model_monitoring`, `model_performance`, `frtb_es_summary`, `frtb_liquidity_buckets`, `risk_factor_modellability`, `stress_results`, `stress_contributions`, `reverse_stress`, `component_var`, `risk_limits`, `data_quality`, `imputation_audit`, `treasury_positions`, `key_rate_dv01`, `treasury_scenarios`, `performance_benchmark`, `operational_efficiency`, and `run_manifest`. It also writes `reports/management_summary.md` for a risk-manager view.
 
 ## Verification
 
@@ -144,7 +147,8 @@ The suite currently reports 18 passing tests plus one environment-gated PostgreS
 
 ## Resume bullets
 
-- Built an end-to-end Python/PostgreSQL market-risk control pipeline spanning an A$1m Australian financials proxy portfolio and a trade-level AUD rates/FX book, producing 21 governed reporting tables.
+- Built an end-to-end Python/PostgreSQL market-risk control pipeline spanning an A$1m Australian financials proxy portfolio and a trade-level AUD rates/FX book, producing 25 governed reporting tables.
+- Implemented a governed FRTB-inspired 97.5% ES view across prescribed liquidity horizons; identified a 1.415 stress scalar and reconciled A$273k liquidity-adjusted to A$387k stress-scaled ES.
 - Priced fixed-rate bond cash flows and an AUD/USD forward from official RBA market data; calculated DV01, convexity, key-rate DV01, hedge offsets, and full-revaluation curve scenario P&L.
 - Implemented Historical, Parametric Normal, EWMA, and Student-t GARCH 99% VaR/ES; the challenger ranked first on common-holdout quantile loss and passed coverage and independence tests on the deterministic stress-regime dataset.
 - Benchmarked a vectorised 50,000-scenario, eight-position stress engine at more than 400x the speed of a reconciled Python row-loop reference on the development machine; documented machine-dependent evidence and workflow assumptions separately.

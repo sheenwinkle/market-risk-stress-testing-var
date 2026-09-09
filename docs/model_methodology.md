@@ -46,7 +46,13 @@ The Basel Framework uses 250 observations for 99% VaR backtesting and places 0-4
 
 Configured scenarios apply transparent position shocks and report both gross loss contributions and net P&L after offsets. Reverse stress scales each scenario to a configurable loss threshold. Linear scaling is appropriate for the current cash-instrument proxy book; nonlinear products would require full revaluation or delta-gamma approximations.
 
-The Basel market-risk framework uses stressed Expected Shortfall and includes market illiquidity and risk-factor modellability in the internal-models approach: [BCBS minimum capital requirements for market risk](https://www.bis.org/publications/201901-standards-minimum-capital-requirements-market-risk). Those regulatory elements are deliberately outside this project's current scope.
+### FRTB-inspired Expected Shortfall
+
+The pipeline also produces a 97.5% Expected Shortfall view using overlapping 10-day P&L returns. Positions are assigned to 10, 20, 40, 60, or 120-day liquidity horizons. Incremental horizon buckets are aggregated by the MAR33 square-root-of-sum-of-squares structure. A transparent stress scalar compares full-history ES with the worst contiguous 250-observation window.
+
+The output includes a data-availability proxy showing trailing observations, represented months, and maximum gaps. It is deliberately labelled as a proxy rather than the regulatory risk-factor eligibility test because public closing prices do not prove real-price observations, committed quotes, or the other evidence an approved trading desk would require.
+
+The Basel market-risk framework specifies 97.5% ES, a 10-day base horizon, prescribed liquidity horizons, stress calibration, and risk-factor modellability in the internal-models approach: [Basel Framework MAR33](https://www.bis.org/basel_framework/chapter/MAR/33.htm). This implementation is a governed management-risk demonstrator, not an FRTB capital number.
 
 ## AUD rates and FX valuation
 

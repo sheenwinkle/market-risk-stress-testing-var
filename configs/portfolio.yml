@@ -8,6 +8,10 @@ portfolio:
   start_date: "2018-01-01"
   end_date: null
 
+frtb:
+  confidence_level: 0.975
+  methodology: liquidity_horizon_and_stress_scaled_es
+
 risk_limits:
   var_aud: 35000
   expected_shortfall_aud: 45000
@@ -31,34 +35,42 @@ assets:
     name: Commonwealth Bank of Australia
     weight: 0.20
     sector: major_bank
+    liquidity_horizon_days: 20
   NAB.AX:
     name: National Australia Bank
     weight: 0.18
     sector: major_bank
+    liquidity_horizon_days: 20
   WBC.AX:
     name: Westpac Banking Corporation
     weight: 0.16
     sector: major_bank
+    liquidity_horizon_days: 20
   ANZ.AX:
     name: ANZ Group Holdings
     weight: 0.16
     sector: major_bank
+    liquidity_horizon_days: 20
   MQG.AX:
     name: Macquarie Group
     weight: 0.12
     sector: diversified_financial
+    liquidity_horizon_days: 40
   QBE.AX:
     name: QBE Insurance Group
     weight: 0.08
     sector: insurance
+    liquidity_horizon_days: 40
   SUN.AX:
     name: Suncorp Group
     weight: 0.05
     sector: insurance
+    liquidity_horizon_days: 40
   IAF.AX:
     name: iShares Core Composite Bond ETF
     weight: 0.05
     sector: rates_proxy
+    liquidity_horizon_days: 20
 
 risk_factors:
   ^AXJO:

@@ -24,6 +24,7 @@ from market_risk.efficiency import (
     render_management_summary,
     scenario_performance_benchmark,
 )
+from market_risk.frtb import frtb_expected_shortfall_report
 from market_risk.governance import build_run_manifest
 from market_risk.risk_models import (
     component_var,
@@ -179,6 +180,18 @@ def run_pipeline(
     historical_stress = historical_stress_windows(portfolio_return_series, config.value_aud)
     sensitivities = factor_sensitivities(portfolio_return_series, factor_returns)
     cvar = component_var(asset_returns, config.weights, config.confidence_level, config.value_aud)
+    liquidity_horizons = {
+        ticker: int(metadata.get("liquidity_horizon_days", 20))
+        for ticker, metadata in config.assets.items()
+    }
+    frtb = frtb_expected_shortfall_report(
+        asset_returns,
+        raw_prices,
+        config.weights,
+        liquidity_horizons,
+        config.value_aud,
+        float(config.frtb.get("confidence_level", 0.975)),
+    )
     limits = risk_limit_report(risk_summary, stress_results, config)
     benchmark = scenario_performance_benchmark(config)
     treasury_tables = value_treasury_book(treasury_book_path, rba_data_dir)
@@ -200,6 +213,9 @@ def run_pipeline(
         "historical_stress": historical_stress,
         "factor_sensitivities": sensitivities,
         "component_var": cvar,
+        "frtb_es_summary": frtb.summary,
+        "frtb_liquidity_buckets": frtb.liquidity_buckets,
+        "risk_factor_modellability": frtb.modellability_proxy,
         "data_quality": data_quality,
         "imputation_audit": imputation_audit,
         "risk_limits": limits,
