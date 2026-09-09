@@ -12,7 +12,6 @@ st.title("Australian Treasury Market Risk Control Centre")
 report_dir = Path(st.sidebar.text_input("Report directory", "reports"))
 
 
-@st.cache_data
 def read_report(name: str) -> pd.DataFrame:
     path = report_dir / f"{name}.csv"
     if not path.exists():
@@ -34,6 +33,11 @@ stress_contributions = read_report("stress_contributions")
 data_quality = read_report("data_quality")
 efficiency = read_report("operational_efficiency")
 benchmark = read_report("performance_benchmark")
+model_performance = read_report("model_performance")
+imputation_audit = read_report("imputation_audit")
+treasury_positions = read_report("treasury_positions")
+key_rate_dv01 = read_report("key_rate_dv01")
+treasury_scenarios = read_report("treasury_scenarios")
 
 if risk_summary.empty:
     st.warning("Run `market-risk run` first to create reports.")
@@ -48,17 +52,25 @@ latest = risk_summary.pivot_table(
 
 efficiency_values = efficiency.set_index("metric")["value"] if not efficiency.empty else pd.Series()
 headline_cols = st.columns(5)
-headline_cols[0].metric("Portfolio", "A$1.0m")
-headline_cols[1].metric("Max 99% VaR", f"A${latest['var'].max():,.0f}")
-headline_cols[2].metric("Max 99% ES", f"A${latest['expected_shortfall'].max():,.0f}")
-headline_cols[3].metric("Limit breaches", int((risk_limits["status"] == "breach").sum()))
+headline_cols[0].metric("Max 99% VaR", f"A${latest['var'].max():,.0f}")
+headline_cols[1].metric("Limit breaches", int((risk_limits["status"] == "breach").sum()))
+headline_cols[2].metric(
+    "Validated models", int((model_monitoring["overall_status"] == "pass").sum())
+)
+market_date = pd.Timestamp(treasury_positions["as_of_date"].iloc[0]).strftime("%d %b %y")
+headline_cols[3].metric("RBA market date", market_date)
 headline_cols[4].metric(
-    "Prep-time reduction",
-    f"{efficiency_values.get('modelled_process_time_reduction', 0):.1f}%",
+    "Core runtime", f"{efficiency_values.get('analytics_runtime_seconds', 0):.2f}s"
 )
 
-overview_tab, validation_tab, stress_tab, controls_tab = st.tabs(
-    ["Risk overview", "Model validation", "Stress and attribution", "Controls and efficiency"]
+overview_tab, treasury_tab, validation_tab, stress_tab, controls_tab = st.tabs(
+    [
+        "Risk overview",
+        "Treasury book",
+        "Model validation",
+        "Stress and attribution",
+        "Controls and efficiency",
+    ]
 )
 
 with overview_tab:
@@ -96,10 +108,50 @@ with overview_tab:
         st.plotly_chart(fig, use_container_width=True)
 
 with validation_tab:
+    left, right = st.columns(2)
+    with left:
+        st.subheader("Common-holdout quantile loss")
+        fig = px.bar(
+            model_performance,
+            x="model",
+            y="mean_quantile_loss",
+            color="quantile_loss_rank",
+            text_auto=".3g",
+        )
+        st.plotly_chart(fig, use_container_width=True)
+    with right:
+        st.subheader("Model ranking")
+        st.dataframe(model_performance, use_container_width=True, hide_index=True)
     st.subheader("Model monitoring decision table")
     st.dataframe(model_monitoring, use_container_width=True, hide_index=True)
     st.subheader("Backtesting detail")
     st.dataframe(backtest_summary, use_container_width=True, hide_index=True)
+
+with treasury_tab:
+    bond_rows = treasury_positions[treasury_positions["instrument_type"] == "fixed_rate_bond"]
+    treasury_metrics = st.columns(4)
+    treasury_metrics[0].metric(
+        "Net market value", f"A${treasury_positions['market_value_aud'].sum():,.0f}"
+    )
+    treasury_metrics[1].metric("Net DV01", f"A${bond_rows['dv01_aud'].sum():,.0f}")
+    treasury_metrics[2].metric("Bond positions", len(bond_rows))
+    treasury_metrics[3].metric("Market source", treasury_positions["market_source"].iloc[0])
+    st.subheader("Trade-level valuation and sensitivities")
+    st.dataframe(treasury_positions, use_container_width=True, hide_index=True)
+
+    left, right = st.columns(2)
+    with left:
+        st.subheader("Key-rate DV01")
+        key_rate_view = key_rate_dv01.groupby("curve_pillar", as_index=False)[
+            "key_rate_dv01_aud"
+        ].sum()
+        fig = px.bar(key_rate_view, x="curve_pillar", y="key_rate_dv01_aud", text_auto=".2s")
+        st.plotly_chart(fig, use_container_width=True)
+    with right:
+        st.subheader("Full-revaluation scenario P&L")
+        scenario_view = treasury_scenarios.groupby("scenario", as_index=False)["pnl_aud"].sum()
+        fig = px.bar(scenario_view, x="scenario", y="pnl_aud", text_auto=".2s")
+        st.plotly_chart(fig, use_container_width=True)
 
 with stress_tab:
     left, right = st.columns(2)
@@ -139,6 +191,9 @@ with controls_tab:
     with right:
         st.subheader("Data quality controls")
         st.dataframe(data_quality, use_container_width=True, hide_index=True)
+
+    st.subheader("Imputation lineage")
+    st.dataframe(imputation_audit, use_container_width=True, hide_index=True)
 
     st.subheader("Operating efficiency evidence")
     st.dataframe(efficiency, use_container_width=True, hide_index=True)
