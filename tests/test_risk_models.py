@@ -4,6 +4,7 @@ import pandas as pd
 from market_risk.risk_models import (
     component_var,
     ewma_var_es,
+    filtered_historical_var_es,
     historical_var_es,
     parametric_var_es,
 )
@@ -27,6 +28,17 @@ def test_historical_var_es_uses_left_tail_losses():
 
     assert measure.var == 0.08
     assert measure.expected_shortfall >= measure.var
+
+
+def test_filtered_historical_simulation_rescales_innovations_to_current_volatility():
+    calm_then_volatile = pd.Series([0.001, -0.001] * 100 + [0.04, -0.05, 0.03, -0.04])
+    volatile_then_calm = pd.Series([0.04, -0.05, 0.03, -0.04] + [0.001, -0.001] * 100)
+
+    recent_shock = filtered_historical_var_es(calm_then_volatile, 0.99)
+    old_shock = filtered_historical_var_es(volatile_then_calm, 0.99)
+
+    assert recent_shock.var > old_shock.var
+    assert recent_shock.expected_shortfall >= recent_shock.var
 
 
 def test_parametric_var_es_is_positive_for_volatile_series():

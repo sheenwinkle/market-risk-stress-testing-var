@@ -11,6 +11,11 @@ SNAPSHOT_TABLES = {
     "backtest_summary",
     "model_monitoring",
     "model_performance",
+    "es_backtesting",
+    "tail_risk_uncertainty",
+    "frtb_es_summary",
+    "frtb_liquidity_buckets",
+    "risk_factor_modellability",
     "stress_results",
     "stress_contributions",
     "reverse_stress",
@@ -80,12 +85,15 @@ def persist_report_tables(
                     write_mode = "replace"
             else:
                 write_mode = "replace"
+            parameter_budget = 900 if connection.dialect.name == "sqlite" else 30_000
+            chunk_size = max(parameter_budget // max(len(sql_frame.columns), 1), 1)
             sql_frame.to_sql(
                 table_name,
                 con=connection,
                 if_exists=write_mode,
                 index=False,
                 method="multi",
+                chunksize=chunk_size,
             )
             if is_snapshot:
                 connection.execute(

@@ -79,6 +79,44 @@ def ewma_var_es(
     )
 
 
+def _ewma_conditional_volatility(values: np.ndarray, decay: float) -> np.ndarray:
+    if len(values) < 2:
+        raise ValueError("At least two observations are required.")
+    variance = max(float(np.var(values[: min(20, len(values))], ddof=1)), 1e-12)
+    volatility = np.empty(len(values), dtype=float)
+    volatility[0] = np.sqrt(variance)
+    for index in range(1, len(values)):
+        variance = decay * variance + (1.0 - decay) * values[index - 1] ** 2
+        volatility[index] = np.sqrt(max(variance, 1e-12))
+    return volatility
+
+
+def filtered_historical_var_es(
+    returns: pd.Series,
+    confidence_level: float,
+    decay: float = 0.94,
+) -> TailRiskMeasure:
+    """EWMA-filtered historical simulation using rescaled empirical innovations."""
+    clean = returns.dropna().astype(float)
+    if len(clean) < 30:
+        raise ValueError("Filtered historical simulation requires at least 30 observations.")
+    if not 0.0 < decay < 1.0:
+        raise ValueError("EWMA decay must be between 0 and 1.")
+
+    values = clean.to_numpy()
+    volatility = _ewma_conditional_volatility(values, decay)
+    innovations = values / volatility
+    next_variance = decay * volatility[-1] ** 2 + (1.0 - decay) * values[-1] ** 2
+    scenarios = pd.Series(innovations * np.sqrt(next_variance))
+    measure = historical_var_es(scenarios, confidence_level)
+    return TailRiskMeasure(
+        model="filtered_historical",
+        confidence_level=confidence_level,
+        var=measure.var,
+        expected_shortfall=measure.expected_shortfall,
+    )
+
+
 def rolling_var_forecasts(
     returns: pd.Series,
     confidence_level: float,
@@ -100,6 +138,8 @@ def rolling_var_forecasts(
             measure = parametric_var_es(history, confidence_level)
         elif model == "ewma":
             measure = ewma_var_es(history, confidence_level, ewma_decay)
+        elif model == "filtered_historical":
+            measure = filtered_historical_var_es(history, confidence_level, ewma_decay)
         else:
             raise ValueError(f"Unsupported VaR model: {model}")
         rows.append(

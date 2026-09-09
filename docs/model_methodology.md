@@ -26,6 +26,12 @@ The challenger estimates a constant-mean GARCH(1,1) process with standardized St
 
 Models are ranked on the common holdout using quantile loss, so different forecast start dates do not create an unfair comparison. Statistical test results remain separate from the loss ranking: a model can produce a low loss while still requiring review for coverage or clustered exceptions.
 
+### Filtered Historical Simulation
+
+Filtered Historical Simulation standardises each historical return by its ex-ante EWMA volatility and rescales the empirical innovations to the latest conditional volatility. It retains non-parametric tail shapes while responding to the current volatility regime. Rolling forecasts use only the preceding 250 observations, preventing future returns from entering the forecast.
+
+The method is based on the framework tested by Barone-Adesi, Giannopoulos, and Vosper, including its use for portfolios with derivative exposures: [Backtesting Derivative Portfolios with Filtered Historical Simulation](https://doi.org/10.1111/1468-036X.00175).
+
 ### Component VaR and factors
 
 Component VaR uses covariance allocation and reconciles to total volatility VaR. OLS factor sensitivity estimates portfolio beta to the configured ASX 200, AUD/USD, and rates proxies. These are linear local approximations and should not be interpreted as trade-level Greeks.
@@ -39,6 +45,11 @@ Every model is tested with rolling one-day-ahead forecasts. The pack reports:
 - Christoffersen exception independence.
 - Combined conditional coverage.
 - Latest 250-observation traffic-light status.
+- A Z2-style unconditional ES calibration statistic and one-sided bootstrap p-value.
+- Realised tail loss divided by forecast ES on exception dates.
+- Moving-block bootstrap 95% intervals for historical VaR and ES.
+
+The ES diagnostic follows the unconditional calibration idea in the model-independent tests proposed by Acerbi and Szekely. It is a model-risk monitoring signal rather than a regulatory pass/fail test: [Backtesting Expected Shortfall](https://www.msci.com/documents/10199/238916/Research_Insight_Backtesting_Expecting_Shortfall_December_2014.pdf).
 
 The Basel Framework uses 250 observations for 99% VaR backtesting and places 0-4 exceptions in green, 5-9 in amber, and 10 or more in red: [Basel MAR32 backtesting requirements](https://www.bis.org/basel_framework/chapter/MAR/32.htm). The project uses those thresholds as a management-model indicator. It does not calculate regulatory capital multipliers.
 

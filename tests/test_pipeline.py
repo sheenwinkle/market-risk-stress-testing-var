@@ -21,6 +21,7 @@ def test_pipeline_creates_reports_and_sqlite_database(tmp_path: Path):
         "historical",
         "parametric_normal",
         "ewma",
+        "filtered_historical",
         "garch_t",
     }
     assert (tmp_path / "reports" / "management_summary.md").exists()
@@ -29,6 +30,8 @@ def test_pipeline_creates_reports_and_sqlite_database(tmp_path: Path):
     assert (tmp_path / "reports" / "frtb_es_summary.csv").exists()
     assert (tmp_path / "reports" / "frtb_liquidity_buckets.csv").exists()
     assert (tmp_path / "reports" / "risk_factor_modellability.csv").exists()
+    assert (tmp_path / "reports" / "es_backtesting.csv").exists()
+    assert (tmp_path / "reports" / "tail_risk_uncertainty.csv").exists()
     assert (tmp_path / "reports" / "run_manifest.csv").exists()
     assert set(result.risk_limits["status"]) <= {"pass", "breach"}
 

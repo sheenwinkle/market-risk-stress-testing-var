@@ -26,9 +26,14 @@ from market_risk.efficiency import (
 )
 from market_risk.frtb import frtb_expected_shortfall_report
 from market_risk.governance import build_run_manifest
+from market_risk.model_validation import (
+    block_bootstrap_tail_uncertainty,
+    es_calibration_backtest,
+)
 from market_risk.risk_models import (
     component_var,
     ewma_var_es,
+    filtered_historical_var_es,
     historical_var_es,
     parametric_var_es,
     rolling_var_forecasts,
@@ -63,6 +68,9 @@ def _risk_summary(
         historical_var_es(portfolio_returns_, config.confidence_level),
         parametric_var_es(portfolio_returns_, config.confidence_level),
         ewma_var_es(portfolio_returns_, config.confidence_level, config.ewma_decay),
+        filtered_historical_var_es(
+            portfolio_returns_, config.confidence_level, config.ewma_decay
+        ),
         garch_t_var_es(portfolio_returns_, config.confidence_level),
     ]
     rows = []
@@ -142,6 +150,13 @@ def run_pipeline(
                 "ewma",
                 config.ewma_decay,
             ),
+            rolling_var_forecasts(
+                portfolio_return_series,
+                config.confidence_level,
+                config.rolling_window_days,
+                "filtered_historical",
+                config.ewma_decay,
+            ),
             garch_t_forecasts(portfolio_return_series, config.confidence_level),
         ],
         ignore_index=True,
@@ -151,29 +166,18 @@ def run_pipeline(
 
     backtests = pd.DataFrame(
         [
-            asdict(run_backtest(forecasts[forecasts["model"] == "historical"], config.confidence_level)),
-            asdict(
-                run_backtest(
-                    forecasts[forecasts["model"] == "parametric_normal"],
-                    config.confidence_level,
-                )
-            ),
-            asdict(
-                run_backtest(
-                    forecasts[forecasts["model"] == "garch_t"],
-                    config.confidence_level,
-                )
-            ),
-            asdict(
-                run_backtest(
-                    forecasts[forecasts["model"] == "ewma"],
-                    config.confidence_level,
-                )
-            ),
+            asdict(run_backtest(frame, config.confidence_level))
+            for _, frame in forecasts.groupby("model", sort=False)
         ]
     )
     model_monitoring = model_monitoring_report(backtests)
     model_performance = model_performance_report(forecasts, config.confidence_level)
+    es_backtesting = es_calibration_backtest(forecasts, config.confidence_level)
+    tail_uncertainty = block_bootstrap_tail_uncertainty(
+        portfolio_return_series,
+        config.confidence_level,
+        config.value_aud,
+    )
     stress_results = configured_stress_scenarios(config)
     stress_contributions = stress_position_contributions(config)
     reverse_stress = reverse_stress_results(config, stress_results)
@@ -207,6 +211,8 @@ def run_pipeline(
         "backtest_summary": backtests,
         "model_monitoring": model_monitoring,
         "model_performance": model_performance,
+        "es_backtesting": es_backtesting,
+        "tail_risk_uncertainty": tail_uncertainty,
         "stress_results": stress_results,
         "stress_contributions": stress_contributions,
         "reverse_stress": reverse_stress,
