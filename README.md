@@ -13,7 +13,7 @@ The deterministic demo run gives every result below from one command, so the cla
 | Core analytics | Approximately 1.5 seconds on the development machine |
 | Batch scenario valuation | 50,000 scenarios x 8 positions |
 | Vectorisation benchmark | More than 400x faster than the transparent Python row-loop baseline on the development machine |
-| Automated reporting | 18 CSV/SQL-ready tables and more than 7,000 rows per run |
+| Automated reporting | 21 CSV/SQL-ready tables and more than 7,000 rows per run |
 | Data controls | Raw completeness, freshness, source, validity, gaps, and imputation lineage |
 | Model validation | 3 models, 3 statistical tests, rolling 250-day traffic-light monitoring |
 | Risk monitoring | 9 configurable VaR, ES, and stress-limit tests |
@@ -31,6 +31,7 @@ The project targets the repeated preparation work around risk analysis, not the 
 3. Stress P&L, hedge offsets, position contributions, reverse-stress distance, and limits reconcile from the same configuration.
 4. The same governed tables feed CSV, SQLite/PostgreSQL, SQL queries, the dashboard, and a management summary.
 5. A run manifest hashes the input data and configuration, reducing time spent proving which inputs produced a report.
+6. A trade-level AUD rates/FX book converts RBA zero curves into bond value, DV01, convexity, key-rate DV01, and full-revaluation scenario P&L.
 
 Human review, breach explanation, exception classification, and escalation remain deliberately outside automation.
 
@@ -81,6 +82,7 @@ Yahoo Finance or deterministic demo prices
 - Covariance component VaR and OLS factor sensitivities to ASX 200, AUD/USD, and an Australian rates proxy.
 - Configurable risk appetite limits with utilisation, headroom, and breach status.
 - Input/config SHA-256 hashes, run ID, data lineage dates, and pipeline version.
+- Cash-flow valuation for AUD fixed-rate bonds, AUD/USD forward mark-to-market, parallel and shaped curve scenarios, DV01, convexity, and key-rate DV01.
 
 The scope and regulatory limitations are documented in `docs/model_methodology.md`.
 
@@ -125,7 +127,7 @@ python -m market_risk.cli run --database-url postgresql+psycopg2://risk_user:ris
 
 ## Output pack
 
-Each run produces 18 database-ready tables, including `risk_summary`, `var_backtest`, `model_monitoring`, `stress_results`, `stress_contributions`, `reverse_stress`, `component_var`, `risk_limits`, `data_quality`, `imputation_audit`, `performance_benchmark`, `operational_efficiency`, and `run_manifest`. It also writes `reports/management_summary.md` for a risk-manager view.
+Each run produces 21 database-ready tables, including `risk_summary`, `var_backtest`, `model_monitoring`, `stress_results`, `stress_contributions`, `reverse_stress`, `component_var`, `risk_limits`, `data_quality`, `imputation_audit`, `treasury_positions`, `key_rate_dv01`, `treasury_scenarios`, `performance_benchmark`, `operational_efficiency`, and `run_manifest`. It also writes `reports/management_summary.md` for a risk-manager view.
 
 ## Verification
 
@@ -138,7 +140,8 @@ The 11-test suite covers tail-risk calculations, EWMA response to recent volatil
 
 ## Resume bullets
 
-- Built an end-to-end Python/PostgreSQL market-risk control pipeline for an A$1m Australian financials and treasury proxy book, producing 18 governed reporting tables across VaR/ES, limits, stress, attribution, data quality, and model validation.
+- Built an end-to-end Python/PostgreSQL market-risk control pipeline spanning an A$1m Australian financials proxy portfolio and a trade-level AUD rates/FX book, producing 21 governed reporting tables.
+- Priced fixed-rate bond cash flows and an AUD/USD forward from official RBA market data; calculated DV01, convexity, key-rate DV01, hedge offsets, and full-revaluation curve scenario P&L.
 - Implemented and compared Historical, Parametric Normal, and EWMA 99% VaR/ES models using 1,052 rolling forecasts, with Kupiec, Christoffersen, conditional-coverage, and 250-day traffic-light controls.
 - Benchmarked a vectorised 50,000-scenario, eight-position stress engine at more than 400x the speed of a reconciled Python row-loop reference on the development machine; documented machine-dependent evidence and workflow assumptions separately.
 - Automated position-level stress attribution, reverse-stress thresholds, configurable limit monitoring, SQL reporting, input lineage hashes, and a four-view Streamlit risk dashboard.

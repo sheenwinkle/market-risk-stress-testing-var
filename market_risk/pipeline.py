@@ -38,6 +38,7 @@ from market_risk.stress import (
     reverse_stress_results,
     stress_position_contributions,
 )
+from market_risk.treasury import value_treasury_book
 
 
 @dataclass(frozen=True)
@@ -92,6 +93,8 @@ def run_pipeline(
     prices_path: str | Path,
     report_dir: str | Path,
     database_url: str | None = None,
+    treasury_book_path: str | Path = "configs/treasury_book.yml",
+    rba_data_dir: str | Path = "data/raw/rba",
 ) -> PipelineResult:
     analytics_started = perf_counter()
     config = load_config(config_path)
@@ -168,6 +171,7 @@ def run_pipeline(
     cvar = component_var(asset_returns, config.weights, config.confidence_level, config.value_aud)
     limits = risk_limit_report(risk_summary, stress_results, config)
     benchmark = scenario_performance_benchmark(config)
+    treasury_tables = value_treasury_book(treasury_book_path, rba_data_dir)
 
     report_dir = Path(report_dir)
     database_url = database_url or sqlite_url(report_dir / "risk_reports.db")
@@ -190,6 +194,7 @@ def run_pipeline(
         "risk_limits": limits,
         "performance_benchmark": benchmark,
         "run_manifest": run_manifest,
+        **treasury_tables,
     }
     efficiency = operational_efficiency_report(
         config,

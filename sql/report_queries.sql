@@ -76,6 +76,25 @@ select metric, round(value::numeric, 3) as value, unit, basis, interpretation
 from operational_efficiency
 order by metric;
 
+-- Trade-level AUD rates and FX sensitivities.
+select
+    trade_id,
+    instrument_type,
+    round(market_value_aud::numeric, 2) as market_value_aud,
+    round(dv01_aud::numeric, 2) as dv01_aud,
+    round(modified_duration::numeric, 3) as modified_duration,
+    market_source
+from treasury_positions
+order by abs(dv01_aud) desc;
+
+-- Full-revaluation Treasury scenario P&L after hedge offsets.
+select
+    scenario,
+    round(sum(pnl_aud)::numeric, 2) as net_pnl_aud
+from treasury_scenarios
+group by scenario
+order by net_pnl_aud;
+
 -- Risk limit utilisation and breaches for daily escalation.
 select
     risk_type,

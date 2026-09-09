@@ -42,6 +42,14 @@ Configured scenarios apply transparent position shocks and report both gross los
 
 The Basel market-risk framework uses stressed Expected Shortfall and includes market illiquidity and risk-factor modellability in the internal-models approach: [BCBS minimum capital requirements for market risk](https://www.bis.org/publications/201901-standards-minimum-capital-requirements-market-risk). Those regulatory elements are deliberately outside this project's current scope.
 
+## AUD rates and FX valuation
+
+The Treasury module discounts signed fixed-rate bond cash flows against the latest common-date RBA zero curve. Zero rates are linearly interpolated by maturity and applied with continuous compounding. Parallel one-basis-point revaluation produces DV01; symmetric up/down bumps produce convexity; individual pillar bumps produce key-rate DV01.
+
+The AUD/USD forward is represented as receipt of a USD notional against a contracted AUD amount. Mark-to-market is the discounted difference between the current AUD value of the USD receipt and contracted AUD payment. This is a transparent educational valuation and omits cross-currency basis, collateral discounting, settlement conventions, and counterparty adjustments.
+
+Curve scenarios use full cash-flow revaluation after parallel or tenor-shaped zero-rate shocks. This makes the scenario result sensitive to maturity and hedge positions rather than applying a fixed percentage directly to each instrument.
+
 ## Governance and reproducibility
 
 Each run records SHA-256 hashes for the input price file and portfolio configuration, a deterministic run ID, source date range, dimensions, UTC generation time, and pipeline version. Data-quality, model-monitoring, limit, and efficiency tables are written to the same database as risk results.

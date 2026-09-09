@@ -1,0 +1,49 @@
+book:
+  name: AUD Rates and FX Treasury Book
+  base_currency: AUD
+
+positions:
+  - trade_id: AGS_2028_LONG
+    instrument_type: fixed_rate_bond
+    issuer: Australian Government
+    face_value_aud: 2000000
+    coupon_rate: 0.0225
+    maturity_date: "2028-05-21"
+    coupon_frequency: 2
+  - trade_id: AGS_2031_LONG
+    instrument_type: fixed_rate_bond
+    issuer: Australian Government
+    face_value_aud: 1500000
+    coupon_rate: 0.0150
+    maturity_date: "2031-06-21"
+    coupon_frequency: 2
+  - trade_id: AGS_2035_HEDGE
+    instrument_type: fixed_rate_bond
+    issuer: Australian Government
+    face_value_aud: -750000
+    coupon_rate: 0.0275
+    maturity_date: "2035-06-21"
+    coupon_frequency: 2
+  - trade_id: AUDUSD_FORWARD
+    instrument_type: fx_forward
+    receive_currency: USD
+    receive_notional: 500000
+    contracted_audusd: 0.6600
+    maturity_years: 0.5
+
+curve_scenarios:
+  parallel_up_100bp:
+    description: Parallel AUD zero-curve increase.
+    short_end_bp: 100
+    long_end_bp: 100
+    fx_spot_shock_pct: 0
+  bear_steepener:
+    description: Front end up 50bp and 10-year point up 150bp.
+    short_end_bp: 50
+    long_end_bp: 150
+    fx_spot_shock_pct: -0.03
+  bull_flattener:
+    description: Front end down 100bp and 10-year point down 40bp.
+    short_end_bp: -100
+    long_end_bp: -40
+    fx_spot_shock_pct: 0.02
