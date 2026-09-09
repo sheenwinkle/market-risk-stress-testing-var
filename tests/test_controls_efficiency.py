@@ -17,6 +17,7 @@ def test_data_quality_flags_missing_ticker():
 
     assert report.loc["missing_required_tickers", "observed_value"] == 1
     assert report.loc["missing_required_tickers", "status"] == "fail"
+    assert report.loc["source_type", "observed_value"] == "unknown"
 
 
 def test_vectorized_scenario_benchmark_reconciles():

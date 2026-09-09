@@ -6,6 +6,7 @@ from pathlib import Path
 from market_risk.config import load_config
 from market_risk.data import download_adjusted_close, make_demo_prices
 from market_risk.pipeline import run_pipeline
+from market_risk.rba_data import download_rba_market_data
 
 DEFAULT_CONFIG = Path("configs/portfolio.yml")
 DEFAULT_PRICES = Path("data/raw/prices.csv")
@@ -47,6 +48,11 @@ def _run(args: argparse.Namespace) -> None:
     print(f"\nManagement summary: {result.report_dir / 'management_summary.md'}")
 
 
+def _download_rba(args: argparse.Namespace) -> None:
+    catalog = download_rba_market_data(args.output_dir)
+    print(catalog.to_string(index=False))
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="market-risk",
@@ -63,6 +69,10 @@ def build_parser() -> argparse.ArgumentParser:
     demo.add_argument("--config", default=DEFAULT_CONFIG)
     demo.add_argument("--output", default=DEFAULT_PRICES)
     demo.set_defaults(func=_demo_data)
+
+    rba = subparsers.add_parser("download-rba", help="Download official RBA FX and AUD zero-curve data.")
+    rba.add_argument("--output-dir", default=Path("data/raw/rba"))
+    rba.set_defaults(func=_download_rba)
 
     run = subparsers.add_parser("run", help="Run the full VaR/stress/backtesting/reporting pipeline.")
     run.add_argument("--config", default=DEFAULT_CONFIG)

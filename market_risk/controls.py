@@ -6,21 +6,30 @@ import pandas as pd
 from market_risk.config import PortfolioConfig
 
 
-def data_quality_report(prices: pd.DataFrame, required_tickers: list[str]) -> pd.DataFrame:
+def data_quality_report(
+    prices: pd.DataFrame,
+    required_tickers: list[str],
+    source_type: str = "unknown",
+    freshness_threshold_days: int = 7,
+) -> pd.DataFrame:
     available_tickers = [ticker for ticker in required_tickers if ticker in prices.columns]
     duplicate_dates = int(prices.index.duplicated().sum())
     missing_cells = int(prices[available_tickers].isna().sum().sum())
     nonpositive_prices = int((prices[available_tickers] <= 0).sum().sum())
     date_gaps = prices.index.to_series().sort_values().diff().dt.days.dropna()
     max_calendar_gap = int(date_gaps.max()) if not date_gaps.empty else 0
+    as_of = pd.Timestamp.now(tz="UTC").tz_localize(None).normalize()
+    latest = pd.Timestamp(prices.index.max()).normalize()
+    age_days = max((as_of - latest).days, 0)
     checks = [
         ("missing_required_tickers", len(set(required_tickers) - set(prices.columns)), 0),
         ("duplicate_dates", duplicate_dates, 0),
         ("missing_price_cells", missing_cells, 0),
         ("nonpositive_prices", nonpositive_prices, 0),
         ("max_calendar_gap_days", max_calendar_gap, 5),
+        ("data_age_days", age_days, freshness_threshold_days),
     ]
-    return pd.DataFrame(
+    report = pd.DataFrame(
         [
             {
                 "check": name,
@@ -31,6 +40,10 @@ def data_quality_report(prices: pd.DataFrame, required_tickers: list[str]) -> pd
             for name, observed, threshold in checks
         ]
     )
+    source_row = pd.DataFrame(
+        [{"check": "source_type", "observed_value": source_type, "threshold": "approved source", "status": "info"}]
+    )
+    return pd.concat([report, source_row], ignore_index=True)
 
 
 def risk_limit_report(

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import json
+from datetime import datetime, timezone
 from pathlib import Path
 
 import numpy as np
@@ -47,6 +49,7 @@ def download_adjusted_close(
     output_path = Path(output_path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
     close.to_csv(output_path, index_label="date")
+    write_data_metadata(output_path, "yahoo_finance", tickers)
     return close
 
 
@@ -86,12 +89,51 @@ def make_demo_prices(config: PortfolioConfig, output_path: str | Path, seed: int
     output_path = Path(output_path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
     price_frame.to_csv(output_path, index_label="date")
+    write_data_metadata(output_path, "synthetic_demo", tickers)
     return price_frame
 
 
 def load_prices(path: str | Path) -> pd.DataFrame:
     prices = pd.read_csv(path, parse_dates=["date"]).set_index("date").sort_index()
-    return prices.ffill().dropna(how="all")
+    return prices.dropna(how="all")
+
+
+def impute_prices(prices: pd.DataFrame, limit: int = 3) -> tuple[pd.DataFrame, pd.DataFrame]:
+    missing_before = prices.isna()
+    cleaned = prices.ffill(limit=limit)
+    imputed = missing_before & cleaned.notna()
+    audit = pd.DataFrame(
+        {
+            "ticker": prices.columns,
+            "raw_missing_count": missing_before.sum().values,
+            "imputed_count": imputed.sum().values,
+            "remaining_missing_count": cleaned.isna().sum().values,
+            "imputation_rate": imputed.sum().values / max(len(prices), 1),
+            "method": f"forward_fill_limit_{limit}",
+        }
+    )
+    return cleaned, audit
+
+
+def metadata_path(data_path: str | Path) -> Path:
+    path = Path(data_path)
+    return path.with_suffix(path.suffix + ".metadata.json")
+
+
+def write_data_metadata(path: str | Path, source_type: str, series: list[str]) -> None:
+    payload = {
+        "source_type": source_type,
+        "retrieved_at_utc": datetime.now(timezone.utc).isoformat(),
+        "series": series,
+    }
+    metadata_path(path).write_text(json.dumps(payload, indent=2), encoding="utf-8")
+
+
+def load_data_metadata(path: str | Path) -> dict[str, object]:
+    sidecar = metadata_path(path)
+    if not sidecar.exists():
+        return {"source_type": "unknown", "retrieved_at_utc": None, "series": []}
+    return json.loads(sidecar.read_text(encoding="utf-8"))
 
 
 def simple_returns(prices: pd.DataFrame) -> pd.DataFrame:
@@ -105,4 +147,3 @@ def portfolio_returns(asset_returns: pd.DataFrame, weights: dict[str, float]) ->
         raise ValueError(f"Missing asset return columns: {missing}")
     weight_vector = pd.Series(weights).reindex(asset_returns.columns).fillna(0.0)
     return asset_returns.mul(weight_vector, axis=1).sum(axis=1).rename("portfolio_return")
-

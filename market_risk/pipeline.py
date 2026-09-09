@@ -9,7 +9,14 @@ import pandas as pd
 from market_risk.backtesting import run_backtest
 from market_risk.config import PortfolioConfig, load_config
 from market_risk.controls import data_quality_report, model_monitoring_report, risk_limit_report
-from market_risk.data import load_prices, make_demo_prices, portfolio_returns, simple_returns
+from market_risk.data import (
+    impute_prices,
+    load_data_metadata,
+    load_prices,
+    make_demo_prices,
+    portfolio_returns,
+    simple_returns,
+)
 from market_risk.database import persist_report_tables, sqlite_url
 from market_risk.efficiency import (
     operational_efficiency_report,
@@ -92,12 +99,15 @@ def run_pipeline(
     if not prices_path.exists():
         make_demo_prices(config, prices_path)
 
-    prices = load_prices(prices_path)
-    run_manifest = build_run_manifest(config_path, prices_path, prices)
-    missing_assets = sorted(set(config.asset_tickers) - set(prices.columns))
+    raw_prices = load_prices(prices_path)
+    metadata = load_data_metadata(prices_path)
+    source_type = str(metadata.get("source_type", "unknown"))
+    run_manifest = build_run_manifest(config_path, prices_path, raw_prices, source_type)
+    missing_assets = sorted(set(config.asset_tickers) - set(raw_prices.columns))
     if missing_assets:
         raise ValueError(f"Price file is missing configured assets: {missing_assets}")
-    data_quality = data_quality_report(prices, config.all_tickers)
+    data_quality = data_quality_report(raw_prices, config.all_tickers, source_type)
+    prices, imputation_audit = impute_prices(raw_prices)
 
     returns = simple_returns(prices)
     asset_returns = returns[config.asset_tickers].dropna()
@@ -176,6 +186,7 @@ def run_pipeline(
         "factor_sensitivities": sensitivities,
         "component_var": cvar,
         "data_quality": data_quality,
+        "imputation_audit": imputation_audit,
         "risk_limits": limits,
         "performance_benchmark": benchmark,
         "run_manifest": run_manifest,

@@ -13,8 +13,8 @@ The deterministic demo run gives every result below from one command, so the cla
 | Core analytics | Approximately 1.5 seconds on the development machine |
 | Batch scenario valuation | 50,000 scenarios x 8 positions |
 | Vectorisation benchmark | More than 400x faster than the transparent Python row-loop baseline on the development machine |
-| Automated reporting | 17 CSV/SQL-ready tables and more than 7,000 rows per run |
-| Data controls | 5 automated checks for completeness, duplicates, validity, and date gaps |
+| Automated reporting | 18 CSV/SQL-ready tables and more than 7,000 rows per run |
+| Data controls | Raw completeness, freshness, source, validity, gaps, and imputation lineage |
 | Model validation | 3 models, 3 statistical tests, rolling 250-day traffic-light monitoring |
 | Risk monitoring | 9 configurable VaR, ES, and stress-limit tests |
 
@@ -26,7 +26,7 @@ The workflow model in `configs/portfolio.yml` estimates 130 minutes for seven sp
 
 The project targets the repeated preparation work around risk analysis, not the accountable risk decision:
 
-1. Market data, return construction, portfolio mapping, and quality checks run as one controlled flow.
+1. Raw market data, pre-imputation quality checks, return construction, portfolio mapping, and fill lineage run as one controlled flow.
 2. Historical, Parametric Normal, and EWMA VaR/ES are calculated and backtested together instead of in separate spreadsheets.
 3. Stress P&L, hedge offsets, position contributions, reverse-stress distance, and limits reconcile from the same configuration.
 4. The same governed tables feed CSV, SQLite/PostgreSQL, SQL queries, the dashboard, and a management summary.
@@ -88,10 +88,11 @@ The scope and regulatory limitations are documented in `docs/model_methodology.m
 
 The default configuration uses listed Australian financial names and liquid proxies: `CBA.AX`, `NAB.AX`, `WBC.AX`, `ANZ.AX`, `MQG.AX`, `QBE.AX`, `SUN.AX`, and `IAF.AX`. Risk factors are `^AXJO`, `AUDUSD=X`, and `IAF.AX`.
 
-Two reproducible data modes are supported:
+Three reproducible data sources are supported:
 
 1. Public adjusted prices downloaded through `yfinance` from Yahoo Finance.
 2. Deterministic synthetic prices generated locally when no price file exists.
+3. Official RBA F11.1 AUD exchange rates and F17 zero-coupon yields, with URL, retrieval timestamp, date range, dimensions, and SHA-256 recorded in a data catalog.
 
 Raw downloaded prices are excluded from Git because redistribution rights depend on the source. The offline data generator keeps tests and portfolio demonstrations reproducible.
 
@@ -109,6 +110,7 @@ Use public market data instead:
 
 ```powershell
 python -m market_risk.cli download
+python -m market_risk.cli download-rba
 python -m market_risk.cli run
 ```
 
@@ -123,7 +125,7 @@ python -m market_risk.cli run --database-url postgresql+psycopg2://risk_user:ris
 
 ## Output pack
 
-Each run produces 17 database-ready tables, including `risk_summary`, `var_backtest`, `model_monitoring`, `stress_results`, `stress_contributions`, `reverse_stress`, `component_var`, `risk_limits`, `data_quality`, `performance_benchmark`, `operational_efficiency`, and `run_manifest`. It also writes `reports/management_summary.md` for a risk-manager view.
+Each run produces 18 database-ready tables, including `risk_summary`, `var_backtest`, `model_monitoring`, `stress_results`, `stress_contributions`, `reverse_stress`, `component_var`, `risk_limits`, `data_quality`, `imputation_audit`, `performance_benchmark`, `operational_efficiency`, and `run_manifest`. It also writes `reports/management_summary.md` for a risk-manager view.
 
 ## Verification
 
@@ -136,7 +138,7 @@ The 11-test suite covers tail-risk calculations, EWMA response to recent volatil
 
 ## Resume bullets
 
-- Built an end-to-end Python/PostgreSQL market-risk control pipeline for an A$1m Australian financials and treasury proxy book, producing 17 governed reporting tables across VaR/ES, limits, stress, attribution, data quality, and model validation.
+- Built an end-to-end Python/PostgreSQL market-risk control pipeline for an A$1m Australian financials and treasury proxy book, producing 18 governed reporting tables across VaR/ES, limits, stress, attribution, data quality, and model validation.
 - Implemented and compared Historical, Parametric Normal, and EWMA 99% VaR/ES models using 1,052 rolling forecasts, with Kupiec, Christoffersen, conditional-coverage, and 250-day traffic-light controls.
 - Benchmarked a vectorised 50,000-scenario, eight-position stress engine at more than 400x the speed of a reconciled Python row-loop reference on the development machine; documented machine-dependent evidence and workflow assumptions separately.
 - Automated position-level stress attribution, reverse-stress thresholds, configurable limit monitoring, SQL reporting, input lineage hashes, and a four-view Streamlit risk dashboard.

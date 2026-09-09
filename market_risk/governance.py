@@ -19,6 +19,7 @@ def build_run_manifest(
     config_path: str | Path,
     prices_path: str | Path,
     prices: pd.DataFrame,
+    source_type: str = "unknown",
 ) -> pd.DataFrame:
     config_path = Path(config_path)
     prices_path = Path(prices_path)
@@ -37,6 +38,7 @@ def build_run_manifest(
                 "price_start_date": prices.index.min().date(),
                 "price_end_date": prices.index.max().date(),
                 "pipeline_version": "0.2.0",
+                "source_type": source_type,
             }
         ]
     )
