@@ -125,7 +125,7 @@ docker compose up -d postgres
 python -m market_risk.cli run --database-url postgresql+psycopg2://risk_user:risk_password@localhost:5432/market_risk
 ```
 
-`sql/report_queries.sql` contains management queries for headline risk, exceptions, component VaR, stress losses, risk-limit utilisation, model monitoring, and operational-efficiency evidence. SQLite is used by default for a zero-setup local run.
+`sql/report_queries.sql` contains management queries for headline risk, exceptions, component VaR, stress losses, risk-limit utilisation, model monitoring, run history, and operational-efficiency evidence. Snapshot tables are append-only by deterministic `run_id`; a retry is idempotent while a changed input or configuration preserves a new historical run. SQLite is used by default for a zero-setup local run. See `docs/database_design.md`.
 
 ## Output pack
 
@@ -138,7 +138,7 @@ ruff check .
 pytest
 ```
 
-The 17-test suite covers tail-risk calculations, EWMA response, GARCH holdout forecasts, component VaR reconciliation, statistical backtesting, traffic-light boundaries, data lineage, scenario reconciliation, Treasury revaluation, and the end-to-end SQL/reporting flow.
+The suite currently reports 18 passing tests plus one environment-gated PostgreSQL integration test. It covers tail-risk calculations, EWMA response, GARCH holdout forecasts, component VaR reconciliation, statistical backtesting, traffic-light boundaries, data lineage, scenario reconciliation, Treasury revaluation, snapshot idempotency, and the end-to-end SQL/reporting flow.
 
 ## Resume bullets
 

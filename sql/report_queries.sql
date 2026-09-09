@@ -1,6 +1,9 @@
 -- PostgreSQL reporting queries for the risk-reporting layer.
 
 -- Latest headline VaR/ES numbers in AUD.
+with latest_run as (
+    select run_id from run_manifest order by generated_at_utc desc limit 1
+)
 select
     as_of_date,
     model,
@@ -8,6 +11,7 @@ select
     round(value_as_return::numeric, 6) as value_as_return,
     round(value_aud::numeric, 2) as value_aud
 from risk_summary
+where run_id = (select run_id from latest_run)
 order by as_of_date desc, model, metric;
 
 -- One-day VaR exceptions by model for model-risk review.
@@ -85,6 +89,17 @@ order by quantile_loss_rank;
 select metric, round(value::numeric, 3) as value, unit, basis, interpretation
 from operational_efficiency
 order by metric;
+
+-- Available historical runs for audit and trend analysis.
+select
+    run_id,
+    generated_at_utc,
+    source_type,
+    price_start_date,
+    price_end_date,
+    pipeline_version
+from run_manifest
+order by generated_at_utc desc;
 
 -- Trade-level AUD rates and FX sensitivities.
 select

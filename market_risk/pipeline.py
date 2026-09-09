@@ -215,7 +215,8 @@ def run_pipeline(
     )
     tables = {**base_tables, "operational_efficiency": efficiency}
     _write_reports(report_dir, tables)
-    persist_report_tables(database_url, tables)
+    run_id = str(run_manifest["run_id"].iloc[0])
+    persist_report_tables(database_url, tables, run_id)
     summary = render_management_summary(
         config,
         risk_summary,

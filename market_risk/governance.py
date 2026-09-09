@@ -37,7 +37,7 @@ def build_run_manifest(
                 "price_columns": len(prices.columns),
                 "price_start_date": prices.index.min().date(),
                 "price_end_date": prices.index.max().date(),
-                "pipeline_version": "0.2.0",
+                "pipeline_version": "0.3.0",
                 "source_type": source_type,
             }
         ]
