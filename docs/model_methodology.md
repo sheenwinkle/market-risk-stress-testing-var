@@ -20,6 +20,12 @@ Parametric VaR and ES use sample mean and volatility with a normal distribution.
 
 The EWMA model recursively weights squared returns with lambda 0.94 by default. It responds more quickly to recent volatility and is useful as a challenger to equally weighted history. It still assumes conditional normality and a zero one-day conditional mean.
 
+### Student-t GARCH challenger
+
+The challenger estimates a constant-mean GARCH(1,1) process with standardized Student-t innovations on the first 500 observations. Estimated parameters are frozen, and conditional variance is then updated recursively using only information available before each holdout return. This prevents future parameter information leaking into the 802-day out-of-sample backtest.
+
+Models are ranked on the common holdout using quantile loss, so different forecast start dates do not create an unfair comparison. Statistical test results remain separate from the loss ranking: a model can produce a low loss while still requiring review for coverage or clustered exceptions.
+
 ### Component VaR and factors
 
 Component VaR uses covariance allocation and reconciles to total volatility VaR. OLS factor sensitivity estimates portfolio beta to the configured ASX 200, AUD/USD, and rates proxies. These are linear local approximations and should not be interpreted as trade-level Greeks.

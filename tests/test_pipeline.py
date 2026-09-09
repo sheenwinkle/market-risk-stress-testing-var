@@ -17,7 +17,12 @@ def test_pipeline_creates_reports_and_sqlite_database(tmp_path: Path):
     assert (tmp_path / "reports" / "risk_summary.csv").exists()
     assert (tmp_path / "reports" / "risk_reports.db").exists()
     assert not result.risk_summary.empty
-    assert set(result.backtests["model"]) == {"historical", "parametric_normal", "ewma"}
+    assert set(result.backtests["model"]) == {
+        "historical",
+        "parametric_normal",
+        "ewma",
+        "garch_t",
+    }
     assert (tmp_path / "reports" / "management_summary.md").exists()
     assert (tmp_path / "reports" / "operational_efficiency.csv").exists()
     assert (tmp_path / "reports" / "risk_limits.csv").exists()

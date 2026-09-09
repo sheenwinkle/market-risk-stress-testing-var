@@ -7,6 +7,7 @@ from time import perf_counter
 import pandas as pd
 
 from market_risk.backtesting import run_backtest
+from market_risk.challenger import garch_t_forecasts, garch_t_var_es, model_performance_report
 from market_risk.config import PortfolioConfig, load_config
 from market_risk.controls import data_quality_report, model_monitoring_report, risk_limit_report
 from market_risk.data import (
@@ -61,6 +62,7 @@ def _risk_summary(
         historical_var_es(portfolio_returns_, config.confidence_level),
         parametric_var_es(portfolio_returns_, config.confidence_level),
         ewma_var_es(portfolio_returns_, config.confidence_level, config.ewma_decay),
+        garch_t_var_es(portfolio_returns_, config.confidence_level),
     ]
     rows = []
     for measure in measures:
@@ -139,6 +141,7 @@ def run_pipeline(
                 "ewma",
                 config.ewma_decay,
             ),
+            garch_t_forecasts(portfolio_return_series, config.confidence_level),
         ],
         ignore_index=True,
     )
@@ -156,6 +159,12 @@ def run_pipeline(
             ),
             asdict(
                 run_backtest(
+                    forecasts[forecasts["model"] == "garch_t"],
+                    config.confidence_level,
+                )
+            ),
+            asdict(
+                run_backtest(
                     forecasts[forecasts["model"] == "ewma"],
                     config.confidence_level,
                 )
@@ -163,6 +172,7 @@ def run_pipeline(
         ]
     )
     model_monitoring = model_monitoring_report(backtests)
+    model_performance = model_performance_report(forecasts, config.confidence_level)
     stress_results = configured_stress_scenarios(config)
     stress_contributions = stress_position_contributions(config)
     reverse_stress = reverse_stress_results(config, stress_results)
@@ -183,6 +193,7 @@ def run_pipeline(
         "var_backtest": forecasts,
         "backtest_summary": backtests,
         "model_monitoring": model_monitoring,
+        "model_performance": model_performance,
         "stress_results": stress_results,
         "stress_contributions": stress_contributions,
         "reverse_stress": reverse_stress,

@@ -13,9 +13,9 @@ The deterministic demo run gives every result below from one command, so the cla
 | Core analytics | Approximately 1.5 seconds on the development machine |
 | Batch scenario valuation | 50,000 scenarios x 8 positions |
 | Vectorisation benchmark | More than 400x faster than the transparent Python row-loop baseline on the development machine |
-| Automated reporting | 21 CSV/SQL-ready tables and more than 7,000 rows per run |
+| Automated reporting | 22 CSV/SQL-ready tables and more than 8,000 rows per run |
 | Data controls | Raw completeness, freshness, source, validity, gaps, and imputation lineage |
-| Model validation | 3 models, 3 statistical tests, rolling 250-day traffic-light monitoring |
+| Model validation | 4 models, 3 statistical tests, rolling 250-day traffic-light monitoring |
 | Risk monitoring | 9 configurable VaR, ES, and stress-limit tests |
 
 Measured timings are machine-dependent and are regenerated in `reports/performance_benchmark.csv`. Numerical reconciliation against the reference scenario algorithm is also recorded.
@@ -27,7 +27,7 @@ The workflow model in `configs/portfolio.yml` estimates 130 minutes for seven sp
 The project targets the repeated preparation work around risk analysis, not the accountable risk decision:
 
 1. Raw market data, pre-imputation quality checks, return construction, portfolio mapping, and fill lineage run as one controlled flow.
-2. Historical, Parametric Normal, and EWMA VaR/ES are calculated and backtested together instead of in separate spreadsheets.
+2. Historical, Parametric Normal, EWMA, and GARCH-t VaR/ES are calculated and backtested together instead of in separate spreadsheets.
 3. Stress P&L, hedge offsets, position contributions, reverse-stress distance, and limits reconcile from the same configuration.
 4. The same governed tables feed CSV, SQLite/PostgreSQL, SQL queries, the dashboard, and a management summary.
 5. A run manifest hashes the input data and configuration, reducing time spent proving which inputs produced a report.
@@ -44,8 +44,9 @@ For the included A$1 million synthetic Australian financials/treasury proxy book
 | Historical | A$32,777 | A$41,775 | 17 / 1,052 | Green |
 | Parametric Normal | A$31,611 | A$36,111 | 19 / 1,052 | Green |
 | EWMA (lambda 0.94) | A$33,119 | A$37,944 | 19 / 1,052 | Green |
+| GARCH-t challenger | A$35,571 | A$41,439 | 14 / 802 holdout days | Green |
 
-The demo intentionally includes clustered shocks. The statistical monitoring therefore sends models to review even when the latest 250-day Basel-style traffic light is green. This demonstrates that exception count alone is not sufficient model validation.
+The demo intentionally includes clustered shocks. GARCH-t passes unconditional coverage, independence, and combined coverage on its untouched holdout and ranks first by quantile loss; the three simpler models retain at least one review flag. Its current A$35,571 VaR also creates a transparent A$571 limit breach for escalation.
 
 The largest configured stress is `offshore_funding_freeze`, with a net loss of A$120,750 against a A$125,000 limit. Position-level P&L separates gross loss contributors from the positive bond-proxy offset, and reverse stress shows the shock multiplier required to reach a A$100,000 loss threshold.
 
@@ -75,6 +76,7 @@ Yahoo Finance or deterministic demo prices
 - Historical VaR and tail-average Expected Shortfall.
 - Parametric Normal VaR/ES using sample mean and volatility.
 - RiskMetrics-style EWMA VaR/ES with configurable decay.
+- Student-t GARCH(1,1) challenger calibrated on the training period and recursively forecast over an untouched holdout.
 - Rolling one-day-ahead forecasts and exception capture.
 - Kupiec unconditional coverage, Christoffersen independence, and combined conditional coverage tests.
 - Basel-style 99% VaR traffic-light classification over the latest 250 observations.
@@ -127,7 +129,7 @@ python -m market_risk.cli run --database-url postgresql+psycopg2://risk_user:ris
 
 ## Output pack
 
-Each run produces 21 database-ready tables, including `risk_summary`, `var_backtest`, `model_monitoring`, `stress_results`, `stress_contributions`, `reverse_stress`, `component_var`, `risk_limits`, `data_quality`, `imputation_audit`, `treasury_positions`, `key_rate_dv01`, `treasury_scenarios`, `performance_benchmark`, `operational_efficiency`, and `run_manifest`. It also writes `reports/management_summary.md` for a risk-manager view.
+Each run produces 22 database-ready tables, including `risk_summary`, `var_backtest`, `model_monitoring`, `model_performance`, `stress_results`, `stress_contributions`, `reverse_stress`, `component_var`, `risk_limits`, `data_quality`, `imputation_audit`, `treasury_positions`, `key_rate_dv01`, `treasury_scenarios`, `performance_benchmark`, `operational_efficiency`, and `run_manifest`. It also writes `reports/management_summary.md` for a risk-manager view.
 
 ## Verification
 
@@ -136,13 +138,13 @@ ruff check .
 pytest
 ```
 
-The 11-test suite covers tail-risk calculations, EWMA response to recent volatility, component VaR reconciliation, Kupiec and Christoffersen utilities, Basel traffic-light boundaries, data-quality failure detection, scenario benchmark reconciliation, stress P&L attribution, and the end-to-end SQL/reporting flow. GitHub Actions runs lint and tests on every push and pull request.
+The 17-test suite covers tail-risk calculations, EWMA response, GARCH holdout forecasts, component VaR reconciliation, statistical backtesting, traffic-light boundaries, data lineage, scenario reconciliation, Treasury revaluation, and the end-to-end SQL/reporting flow.
 
 ## Resume bullets
 
 - Built an end-to-end Python/PostgreSQL market-risk control pipeline spanning an A$1m Australian financials proxy portfolio and a trade-level AUD rates/FX book, producing 21 governed reporting tables.
 - Priced fixed-rate bond cash flows and an AUD/USD forward from official RBA market data; calculated DV01, convexity, key-rate DV01, hedge offsets, and full-revaluation curve scenario P&L.
-- Implemented and compared Historical, Parametric Normal, and EWMA 99% VaR/ES models using 1,052 rolling forecasts, with Kupiec, Christoffersen, conditional-coverage, and 250-day traffic-light controls.
+- Implemented Historical, Parametric Normal, EWMA, and Student-t GARCH 99% VaR/ES; the challenger ranked first on common-holdout quantile loss and passed coverage and independence tests on the deterministic stress-regime dataset.
 - Benchmarked a vectorised 50,000-scenario, eight-position stress engine at more than 400x the speed of a reconciled Python row-loop reference on the development machine; documented machine-dependent evidence and workflow assumptions separately.
 - Automated position-level stress attribution, reverse-stress thresholds, configurable limit monitoring, SQL reporting, input lineage hashes, and a four-view Streamlit risk dashboard.
 

@@ -71,6 +71,16 @@ select
 from model_monitoring
 order by model;
 
+-- Challenger-model comparison on the common holdout period.
+select
+    model,
+    forecast_observations,
+    round(mean_quantile_loss::numeric, 7) as mean_quantile_loss,
+    exception_count,
+    quantile_loss_rank
+from model_performance
+order by quantile_loss_rank;
+
 -- Evidence for operational-efficiency claims.
 select metric, round(value::numeric, 3) as value, unit, basis, interpretation
 from operational_efficiency
