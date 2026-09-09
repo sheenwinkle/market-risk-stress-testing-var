@@ -19,6 +19,7 @@ from market_risk.data import (
     simple_returns,
 )
 from market_risk.database import persist_report_tables, sqlite_url
+from market_risk.derivatives import value_derivatives_book
 from market_risk.efficiency import (
     operational_efficiency_report,
     render_management_summary,
@@ -106,6 +107,7 @@ def run_pipeline(
     database_url: str | None = None,
     treasury_book_path: str | Path = "configs/treasury_book.yml",
     rba_data_dir: str | Path = "data/raw/rba",
+    derivatives_book_path: str | Path = "configs/derivatives_book.yml",
 ) -> PipelineResult:
     analytics_started = perf_counter()
     config = load_config(config_path)
@@ -199,6 +201,7 @@ def run_pipeline(
     limits = risk_limit_report(risk_summary, stress_results, config)
     benchmark = scenario_performance_benchmark(config)
     treasury_tables = value_treasury_book(treasury_book_path, rba_data_dir)
+    derivative_tables = value_derivatives_book(derivatives_book_path, prices, asset_returns)
 
     report_dir = Path(report_dir)
     database_url = database_url or sqlite_url(report_dir / "risk_reports.db")
@@ -228,6 +231,7 @@ def run_pipeline(
         "performance_benchmark": benchmark,
         "run_manifest": run_manifest,
         **treasury_tables,
+        **derivative_tables,
     }
     efficiency = operational_efficiency_report(
         config,

@@ -31,6 +31,9 @@ SNAPSHOT_TABLES = {
     "treasury_positions",
     "key_rate_dv01",
     "treasury_scenarios",
+    "derivative_positions",
+    "derivative_scenarios",
+    "derivative_historical_risk",
 }
 
 

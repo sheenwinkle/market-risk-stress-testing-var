@@ -32,6 +32,9 @@ def test_pipeline_creates_reports_and_sqlite_database(tmp_path: Path):
     assert (tmp_path / "reports" / "risk_factor_modellability.csv").exists()
     assert (tmp_path / "reports" / "es_backtesting.csv").exists()
     assert (tmp_path / "reports" / "tail_risk_uncertainty.csv").exists()
+    assert (tmp_path / "reports" / "derivative_positions.csv").exists()
+    assert (tmp_path / "reports" / "derivative_scenarios.csv").exists()
+    assert (tmp_path / "reports" / "derivative_historical_risk.csv").exists()
     assert (tmp_path / "reports" / "run_manifest.csv").exists()
     assert set(result.risk_limits["status"]) <= {"pass", "breach"}
 

@@ -73,6 +73,14 @@ The AUD/USD forward is represented as receipt of a USD notional against a contra
 
 Curve scenarios use full cash-flow revaluation after parallel or tenor-shaped zero-rate shocks. This makes the scenario result sensitive to maturity and hedge positions rather than applying a fixed percentage directly to each instrument.
 
+## Equity option valuation and nonlinear risk
+
+The derivatives overlay contains long protective puts, a short covered call, and a tail-risk put on CBA and Macquarie. European options are valued with Black-Scholes using the latest underlying close, a configurable rate and dividend yield, and trailing realised volatility. Position reports expose signed market value, delta, gamma, vega, and theta in AUD units.
+
+Every configured spot/volatility scenario is calculated twice: once with Black-Scholes full revaluation and once with a delta-gamma-vega approximation. The reported approximation error makes the model choice testable. A separate 500-observation historical simulation reprices every option under each observed underlying return rather than applying a linear position shock.
+
+The public-data implementation uses realised volatility as a reproducible proxy because it does not redistribute proprietary option surfaces. Production use would require implied-volatility surfaces by strike and maturity, trading calendars, corporate-action controls, American exercise where applicable, and independent price verification.
+
 ## Governance and reproducibility
 
 Each run records SHA-256 hashes for the input price file and portfolio configuration, a deterministic run ID, source date range, dimensions, UTC generation time, and pipeline version. Data-quality, model-monitoring, limit, and efficiency tables are written to the same database as risk results.

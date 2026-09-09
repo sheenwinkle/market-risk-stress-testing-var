@@ -1,0 +1,55 @@
+book:
+  name: Australian Equity Options Overlay
+  base_currency: AUD
+  confidence_level: 0.99
+  risk_free_rate: 0.04
+  volatility_lookback_days: 60
+
+positions:
+  - trade_id: CBA_PROTECTIVE_PUT
+    instrument_type: european_equity_option
+    underlying: CBA.AX
+    option_type: put
+    quantity: 2500
+    contract_multiplier: 1
+    strike_moneyness: 0.95
+    maturity_years: 0.5
+    dividend_yield: 0.04
+  - trade_id: CBA_COVERED_CALL
+    instrument_type: european_equity_option
+    underlying: CBA.AX
+    option_type: call
+    quantity: -1500
+    contract_multiplier: 1
+    strike_moneyness: 1.05
+    maturity_years: 0.5
+    dividend_yield: 0.04
+  - trade_id: MQG_TAIL_PUT
+    instrument_type: european_equity_option
+    underlying: MQG.AX
+    option_type: put
+    quantity: 1000
+    contract_multiplier: 1
+    strike_moneyness: 0.90
+    maturity_years: 0.75
+    dividend_yield: 0.025
+
+scenarios:
+  equity_selloff_vol_spike:
+    description: Australian financial equity drawdown with a 15-volatility-point spike.
+    spot_shocks:
+      CBA.AX: -0.15
+      MQG.AX: -0.20
+    volatility_shock: 0.15
+  relief_rally_vol_crush:
+    description: Equity rally with normalising implied volatility.
+    spot_shocks:
+      CBA.AX: 0.10
+      MQG.AX: 0.12
+    volatility_shock: -0.05
+  idiosyncratic_cba_gap:
+    description: CBA-specific downside gap with moderate volatility repricing.
+    spot_shocks:
+      CBA.AX: -0.12
+      MQG.AX: 0.00
+    volatility_shock: 0.08

@@ -1,6 +1,6 @@
 # Australian Treasury Market Risk Control Centre
 
-A production-shaped Python and SQL portfolio project for Australian bank, treasury risk, FinTech risk analytics, and model-risk roles. It turns market data into a governed daily risk pack: three VaR/ES models, statistical backtesting, stress and reverse-stress analysis, position attribution, risk-limit monitoring, data-quality controls, PostgreSQL reporting, and an interactive dashboard.
+A production-shaped Python and SQL portfolio project for Australian bank, treasury risk, FinTech risk analytics, and model-risk roles. It turns market data into a governed daily risk pack: five VaR/ES models, FRTB-inspired ES, nonlinear derivatives revaluation, statistical backtesting, stress and reverse-stress analysis, position attribution, risk-limit monitoring, data-quality controls, PostgreSQL reporting, and an interactive dashboard.
 
 This is an analytics demonstrator, not a regulatory capital calculator or investment product.
 
@@ -10,10 +10,10 @@ The deterministic demo run gives every result below from one command, so the cla
 
 | Area | Demonstrated result |
 |---|---:|
-| Core analytics | Approximately 1.5 seconds on the development machine |
+| Core analytics | Approximately 5.2 seconds on the development machine |
 | Batch scenario valuation | 50,000 scenarios x 8 positions |
 | Vectorisation benchmark | More than 400x faster than the transparent Python row-loop baseline on the development machine |
-| Automated reporting | 27 CSV/SQL-ready tables and more than 9,000 rows per run |
+| Automated reporting | 31 CSV/SQL-ready tables and approximately 9,600 rows per run |
 | Data controls | Raw completeness, freshness, source, validity, gaps, and imputation lineage |
 | Model validation | 5 models, VaR coverage/independence plus ES calibration and uncertainty |
 | Risk monitoring | 9 configurable VaR, ES, and stress-limit tests |
@@ -32,6 +32,7 @@ The project targets the repeated preparation work around risk analysis, not the 
 4. The same governed tables feed CSV, SQLite/PostgreSQL, SQL queries, the dashboard, and a management summary.
 5. A run manifest hashes the input data and configuration, reducing time spent proving which inputs produced a report.
 6. A trade-level AUD rates/FX book converts RBA zero curves into bond value, DV01, convexity, key-rate DV01, and full-revaluation scenario P&L.
+7. A trade-level Australian equity-option overlay compares Greeks-based approximation with full revaluation and quantifies model error.
 
 Human review, breach explanation, exception classification, and escalation remain deliberately outside automation.
 
@@ -54,6 +55,8 @@ Historical VaR is A$32,777, but a 500-sample moving-block bootstrap places its 9
 The largest configured stress is `offshore_funding_freeze`, with a net loss of A$120,750 against a A$125,000 limit. Position-level P&L separates gross loss contributors from the positive bond-proxy offset, and reverse stress shows the shock multiplier required to reach a A$100,000 loss threshold.
 
 The FRTB-inspired view reports A$273,262 of 97.5% liquidity-adjusted ES. The worst contiguous 250-observation calibration window runs from February 2021 to February 2022 and produces a 1.415 stress scalar, taking stress-scaled ES to A$386,601. These are method-demonstration outputs rather than regulatory capital figures.
+
+The three-position options overlay has A$901 of 99% full-revaluation VaR and A$1,050 of ES over 500 historical shocks. In the equity-selloff/volatility-spike scenario it gains A$8,394, while delta-gamma-vega estimates A$7,829 and understates the hedge benefit by A$564. The explicit A$564 approximation error demonstrates when full revaluation matters.
 
 ## Architecture
 
@@ -92,6 +95,7 @@ Yahoo Finance or deterministic demo prices
 - Configurable risk appetite limits with utilisation, headroom, and breach status.
 - Input/config SHA-256 hashes, run ID, data lineage dates, and pipeline version.
 - Cash-flow valuation for AUD fixed-rate bonds, AUD/USD forward mark-to-market, parallel and shaped curve scenarios, DV01, convexity, and key-rate DV01.
+- Black-Scholes equity-option valuation, signed delta/gamma/vega/theta, historical full-revaluation VaR/ES, and approximation-error analysis.
 - FRTB-inspired 97.5% ES with 10-day returns, prescribed liquidity-horizon aggregation, stress-window scaling, and an explicitly non-regulatory modellability proxy.
 
 The scope and regulatory limitations are documented in `docs/model_methodology.md`.
@@ -100,7 +104,7 @@ The quantified management narrative is available in `docs/case_study.md`.
 
 ## Portfolio and data
 
-The default configuration uses listed Australian financial names and liquid proxies: `CBA.AX`, `NAB.AX`, `WBC.AX`, `ANZ.AX`, `MQG.AX`, `QBE.AX`, `SUN.AX`, and `IAF.AX`. Risk factors are `^AXJO`, `AUDUSD=X`, and `IAF.AX`.
+The default configuration uses listed Australian financial names and liquid proxies: `CBA.AX`, `NAB.AX`, `WBC.AX`, `ANZ.AX`, `MQG.AX`, `QBE.AX`, `SUN.AX`, and `IAF.AX`. Risk factors are `^AXJO`, `AUDUSD=X`, and `IAF.AX`. A separate options book adds CBA and Macquarie protective, covered-call, and tail-risk structures using reproducible realised-volatility inputs.
 
 Three reproducible data sources are supported:
 
@@ -139,7 +143,7 @@ python -m market_risk.cli run --database-url postgresql+psycopg2://risk_user:ris
 
 ## Output pack
 
-Each run produces 27 database-ready tables, including `risk_summary`, `var_backtest`, `model_monitoring`, `model_performance`, `es_backtesting`, `tail_risk_uncertainty`, `frtb_es_summary`, `frtb_liquidity_buckets`, `risk_factor_modellability`, `stress_results`, `stress_contributions`, `reverse_stress`, `component_var`, `risk_limits`, `data_quality`, `imputation_audit`, `treasury_positions`, `key_rate_dv01`, `treasury_scenarios`, `performance_benchmark`, `operational_efficiency`, and `run_manifest`. It also writes `reports/management_summary.md` for a risk-manager view.
+Each run produces 31 database-ready tables, including model risk, FRTB-inspired ES, stress, controls, rates/FX valuation, and `derivative_positions`, `derivative_scenarios`, `derivative_historical_pnl`, and `derivative_historical_risk`. It also writes `reports/management_summary.md` for a risk-manager view.
 
 ## Verification
 
@@ -155,6 +159,7 @@ The suite currently reports 18 passing tests plus one environment-gated PostgreS
 - Built an end-to-end Python/PostgreSQL market-risk control pipeline spanning an A$1m Australian financials proxy portfolio and a trade-level AUD rates/FX book, producing 25 governed reporting tables.
 - Implemented a governed FRTB-inspired 97.5% ES view across prescribed liquidity horizons; identified a 1.415 stress scalar and reconciled A$273k liquidity-adjusted to A$387k stress-scaled ES.
 - Priced fixed-rate bond cash flows and an AUD/USD forward from official RBA market data; calculated DV01, convexity, key-rate DV01, hedge offsets, and full-revaluation curve scenario P&L.
+- Built a three-trade Australian equity-options overlay with Black-Scholes Greeks and 500-shock full-revaluation VaR/ES; quantified A$564 delta-gamma-vega approximation error in an equity/volatility stress.
 - Implemented five VaR/ES models including Filtered Historical Simulation and Student-t GARCH; FHS produced 11 exceptions across 1,052 forecasts and passed coverage, independence, and ES calibration diagnostics.
 - Quantified estimation risk with moving-block bootstrap intervals, showing the A$32.8k historical VaR point estimate had an A$28.8k-A$41.8k 95% interval.
 - Benchmarked a vectorised 50,000-scenario, eight-position stress engine at more than 400x the speed of a reconciled Python row-loop reference on the development machine; documented machine-dependent evidence and workflow assumptions separately.
@@ -162,7 +167,8 @@ The suite currently reports 18 passing tests plus one environment-gated PostgreS
 
 ## Limitations and next depth
 
-- The listed instruments are portfolio proxies, not an ADI trading book with trade-level Greeks or hypothetical/actual desk P&L.
-- The 99% one-day VaR/ES analytics are management measures; they do not implement FRTB regulatory 97.5% stressed ES, liquidity horizons, modellability, default risk charge, or P&L attribution requirements.
+- The listed instruments are portfolio proxies, not an ADI trading book with hypothetical and actual desk P&L.
+- The FRTB-inspired layer implements 97.5% stressed and liquidity-adjusted ES, but not regulatory capital aggregation, the default risk charge, or desk approval tests.
 - Workflow savings are a configurable business case and require validation against an employer's actual process before use as realised impact.
-- Logical next extensions are trade-level delta/gamma revaluation, yield-curve key-rate shocks, stressed ES, scheduled orchestration, immutable report history, and role-based controls.
+- The option layer uses trailing realised volatility rather than a licensed implied-volatility surface and omits American exercise, transaction costs, and independent price verification.
+- Logical next extensions are desk P&L attribution, transaction-backed modellability evidence, scheduled orchestration, and role-based controls.
