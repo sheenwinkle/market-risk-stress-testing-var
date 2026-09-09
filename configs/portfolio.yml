@@ -1,0 +1,107 @@
+portfolio:
+  name: Australian Bank Treasury Market Risk Book
+  base_currency: AUD
+  value_aud: 1000000
+  confidence_level: 0.99
+  rolling_window_days: 250
+  ewma_decay: 0.94
+  start_date: "2018-01-01"
+  end_date: null
+
+risk_limits:
+  var_aud: 35000
+  expected_shortfall_aud: 45000
+  stress_loss_aud: 125000
+  reverse_stress_loss_aud: 100000
+
+workflow_assumptions:
+  business_days_per_month: 22
+  analyst_review_minutes: 10
+  manual_steps:
+    market_data_extract_and_clean: 20
+    position_mapping_and_validation: 15
+    var_and_es_calculation: 25
+    backtesting_and_exception_review: 20
+    stress_testing_and_attribution: 20
+    limit_monitoring_and_sql_pack: 15
+    management_report_refresh: 15
+
+assets:
+  CBA.AX:
+    name: Commonwealth Bank of Australia
+    weight: 0.20
+    sector: major_bank
+  NAB.AX:
+    name: National Australia Bank
+    weight: 0.18
+    sector: major_bank
+  WBC.AX:
+    name: Westpac Banking Corporation
+    weight: 0.16
+    sector: major_bank
+  ANZ.AX:
+    name: ANZ Group Holdings
+    weight: 0.16
+    sector: major_bank
+  MQG.AX:
+    name: Macquarie Group
+    weight: 0.12
+    sector: diversified_financial
+  QBE.AX:
+    name: QBE Insurance Group
+    weight: 0.08
+    sector: insurance
+  SUN.AX:
+    name: Suncorp Group
+    weight: 0.05
+    sector: insurance
+  IAF.AX:
+    name: iShares Core Composite Bond ETF
+    weight: 0.05
+    sector: rates_proxy
+
+risk_factors:
+  ^AXJO:
+    name: S&P/ASX 200 Index
+    type: equity_index
+  AUDUSD=X:
+    name: AUD/USD FX rate
+    type: fx
+  IAF.AX:
+    name: Australian bond ETF rates proxy
+    type: rates_proxy
+
+stress_scenarios:
+  rba_hawkish_repricing:
+    description: Rapid rate repricing plus Australian bank equity weakness.
+    shocks:
+      CBA.AX: -0.055
+      NAB.AX: -0.060
+      WBC.AX: -0.065
+      ANZ.AX: -0.060
+      MQG.AX: -0.075
+      QBE.AX: -0.030
+      SUN.AX: -0.035
+      IAF.AX: -0.025
+  offshore_funding_freeze:
+    description: Global funding stress, AUD sell-off, wider credit spreads and bank drawdown.
+    shocks:
+      CBA.AX: -0.120
+      NAB.AX: -0.135
+      WBC.AX: -0.140
+      ANZ.AX: -0.130
+      MQG.AX: -0.160
+      QBE.AX: -0.085
+      SUN.AX: -0.075
+      IAF.AX: 0.010
+  covid_liquidity_replay:
+    description: Short-horizon liquidity shock calibrated to early-2020 style risk-off behaviour.
+    shocks:
+      CBA.AX: -0.095
+      NAB.AX: -0.110
+      WBC.AX: -0.115
+      ANZ.AX: -0.105
+      MQG.AX: -0.135
+      QBE.AX: -0.120
+      SUN.AX: -0.090
+      IAF.AX: 0.018

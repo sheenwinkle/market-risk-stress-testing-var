@@ -1,0 +1,11 @@
+numpy>=1.26
+pandas>=2.1
+PyYAML>=6.0
+SQLAlchemy>=2.0
+psycopg2-binary>=2.9
+yfinance>=0.2.40
+streamlit>=1.36
+plotly>=5.22
+pytest>=8.0
+ruff>=0.5
+
