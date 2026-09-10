@@ -250,6 +250,10 @@ def run_pipeline(
         limits,
         stress_results,
         efficiency,
+        frtb.summary,
+        es_backtesting,
+        derivative_tables["derivative_historical_risk"],
+        derivative_tables["derivative_scenarios"],
     )
     (report_dir / "management_summary.md").write_text(summary, encoding="utf-8")
 

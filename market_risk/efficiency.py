@@ -143,12 +143,28 @@ def render_management_summary(
     risk_limits: pd.DataFrame,
     stress_results: pd.DataFrame,
     efficiency: pd.DataFrame,
+    frtb_summary: pd.DataFrame,
+    es_backtesting: pd.DataFrame,
+    derivative_risk: pd.DataFrame,
+    derivative_scenarios: pd.DataFrame,
 ) -> str:
     metrics = efficiency.set_index("metric")["value"]
     worst_stress = stress_results.sort_values("loss_aud", ascending=False).iloc[0]
     breaches = risk_limits[risk_limits["status"] == "breach"]
     reviews = model_monitoring[model_monitoring["overall_status"] == "review"]
     headline = risk_summary.pivot(index="model", columns="metric", values="value_aud")
+    frtb = frtb_summary.iloc[0]
+    option_risk = derivative_risk.iloc[0]
+    best_es_model = es_backtesting.sort_values("z2_statistic", key=lambda values: values.abs()).iloc[0]
+    option_stress = (
+        derivative_scenarios.groupby("scenario")["full_revaluation_pnl_aud"]
+        .sum()
+        .sort_values()
+        .iloc[0]
+    )
+    option_stress_text = (
+        f"-A${abs(option_stress):,.0f}" if option_stress < 0 else f"A${option_stress:,.0f}"
+    )
 
     model_lines = "\n".join(
         f"- {model}: VaR A${row['var']:,.0f}; ES A${row['expected_shortfall']:,.0f}."
@@ -166,6 +182,9 @@ def render_management_summary(
 - Worst configured scenario: **{worst_stress['scenario']}**, loss A${worst_stress['loss_aud']:,.0f}.
 - Limit status: **{len(breaches)} breach(es)** across {len(risk_limits)} monitored measures.
 - Model status: **{len(reviews)} model(s) require review** across {len(model_monitoring)} models.
+- FRTB-inspired 97.5% ES: **A${frtb['liquidity_adjusted_es_aud']:,.0f} liquidity-adjusted** and **A${frtb['stress_scaled_es_aud']:,.0f} stress-scaled** ({frtb['stress_scaling_factor']:.3f}x scalar).
+- ES calibration closest to zero: **{best_es_model['model']}** (Z2-style statistic {best_es_model['z2_statistic']:.3f}, status {best_es_model['es_calibration_status']}).
+- Option overlay: **A${option_risk['full_revaluation_var_aud']:,.0f} full-revaluation VaR**; worst configured option P&L {option_stress_text}.
 
 ## Operating efficiency
 

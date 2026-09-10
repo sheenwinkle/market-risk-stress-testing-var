@@ -37,6 +37,9 @@ def test_pipeline_creates_reports_and_sqlite_database(tmp_path: Path):
     assert (tmp_path / "reports" / "derivative_historical_risk.csv").exists()
     assert (tmp_path / "reports" / "run_manifest.csv").exists()
     assert set(result.risk_limits["status"]) <= {"pass", "breach"}
+    management_summary = (tmp_path / "reports" / "management_summary.md").read_text()
+    assert "FRTB-inspired 97.5% ES" in management_summary
+    assert "Option overlay" in management_summary
 
     stress = pd.read_csv(tmp_path / "reports" / "stress_results.csv")
     assert stress["loss_aud"].max() > 0

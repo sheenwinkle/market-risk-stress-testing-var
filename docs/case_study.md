@@ -2,45 +2,58 @@
 
 ## Decision question
 
-Would a risk manager receive the same decision from a simple VaR model and a volatility-sensitive challenger, and how would the risk change after including an AUD rates and FX hedge book?
+How do model choice, market liquidity, and nonlinear hedges change the risk decision for an Australian financials and Treasury portfolio?
 
 ## Evidence base
 
-- Deterministic listed-asset portfolio: 1,303 business-day observations and A$1 million market value.
-- Official RBA data: 926 AUD exchange-rate observations and 2,426 zero-curve observations across nine maturities.
+- Listed-asset portfolio: 1,303 deterministic business-day observations and A$1 million market value.
+- Public-data option: Yahoo Finance adjusted closes plus official RBA AUD exchange rates and zero curves.
 - Treasury book: three signed Australian Government bond positions and one AUD/USD forward.
-- Validation: 802 common untouched holdout days for four-model comparison.
+- Derivatives overlay: three CBA/Macquarie equity options with trade-level Greeks and full revaluation.
+- Validation: five VaR/ES models, 802 common holdout days, ES calibration, and bootstrap uncertainty.
+- Reporting: 31 CSV/SQL-ready tables and approximately 9,600 rows per governed run.
 
-The listed-asset demo is synthetic so that every test is reproducible. The Treasury valuation uses the locally downloaded RBA F11.1 and F17 files, with 31 August 2026 as the latest common market date.
+The deterministic market series keeps every result reproducible. Public downloads can replace it without changing the controlled pipeline.
 
-## Finding 1: challenger choice changes the limit decision
+## Finding 1: conditional models improve the decision
 
-| Model | Current 99% VaR | Holdout quantile loss | Rank | Coverage | Independence |
-|---|---:|---:|---:|---|---|
-| GARCH-t | A$35,571 | 0.0003874 | 1 | Pass | Pass |
-| Parametric Normal | A$31,611 | 0.0004188 | 2 | Fail | Fail |
-| EWMA | A$33,119 | 0.0004253 | 3 | Fail | Pass |
-| Historical | A$32,777 | 0.0004531 | 4 | Pass | Fail |
+| Model | Current 99% VaR | Full rolling exceptions | Coverage | Independence | ES calibration |
+|---|---:|---:|---|---|---|
+| Filtered Historical | A$35,653 | 11 / 1,052 | Pass | Pass | Pass |
+| GARCH-t | A$35,571 | 14 / 802 | Pass | Pass | Review |
+| Historical | A$32,777 | 17 / 1,052 | Pass | Fail | Review |
+| EWMA | A$33,119 | 19 / 1,052 | Fail | Pass | Review |
+| Parametric Normal | A$31,611 | 19 / 1,052 | Fail | Fail | Review |
 
-GARCH-t reduces common-holdout quantile loss by 14.5% relative to Historical VaR and is the only model that passes both coverage and independence checks. It also estimates A$35,571 VaR against the illustrative A$35,000 limit, creating a A$571 breach that the three simpler models do not identify.
+GARCH-t ranks first on common-holdout quantile loss, reducing loss by 14.5% relative to Historical VaR. FHS is the only model that also passes the Z2-style ES calibration diagnostic and produces an exception rate close to the expected 1%. Both conditional models breach the illustrative A$35,000 VaR limit, while the simpler models do not.
 
-The management response is not to accept GARCH automatically. The risk owner should investigate the breach, review the synthetic shock design, and assess whether the Student-t volatility response better represents the intended portfolio before changing limits or model status.
+The action is model review and breach investigation, not automatic challenger approval. Ranking, VaR coverage, exception independence, and ES calibration remain separate decision criteria.
 
-## Finding 2: maturity risk and hedge offsets are visible
+## Finding 2: longer liquidity horizons dominate one-day risk
 
-The Treasury book has approximately A$2.54 million net market value and A$437 net DV01. The long 2028 and 2031 bonds contribute positive DV01, while the short 2035 bond removes approximately A$490 per basis point of long-end exposure.
+The FRTB-inspired calculation produces A$273,262 of 97.5% liquidity-adjusted ES. The worst contiguous 250-observation period, February 2021 to February 2022, raises the stress scalar to 1.415 and the stress-scaled result to A$386,601.
 
-Under a parallel 100bp increase, the two long bonds lose approximately A$91.0k while the 2035 hedge gains A$47.0k. Including the FX-forward and discounting effects produces a net loss of approximately A$43.7k. A bear-steepener combined with 3% AUD depreciation is close to neutral because the long-end bond hedge and USD receipt offset rates losses.
+The output reconciles each liquidity-horizon bucket and records a non-regulatory modellability proxy. This is useful management evidence, but public closing prices cannot establish the transaction and quote evidence required by the regulatory risk-factor eligibility test.
 
-## Finding 3: automation preserves challenge, not just speed
+## Finding 3: full revaluation matters for nonlinear hedges
 
-One run produces 22 governed tables and more than 8,000 rows in under two seconds of core analytics on the development machine. Data source, pre-imputation missingness, fill counts, configuration hash, input hash, model status, breaches, and Treasury sensitivities are generated from the same run ID.
+The option overlay has A$901 of 99% full-revaluation VaR and A$1,050 of ES over 500 historical shocks. In the equity-selloff/volatility-spike scenario, protective options gain A$8,394. Delta-gamma-vega estimates A$7,829, understating the hedge benefit by A$564, or 6.7%.
 
-The configured 130-to-10 minute workflow comparison remains a business-case assumption. It is not treated as realised employer savings. The defensible technical performance claim is processing 50,000 eight-position scenarios with exact reconciliation to a transparent reference algorithm.
+The explicit approximation error provides a controlled threshold for choosing full revaluation. The current use of realised volatility is reproducible but should be replaced by an approved implied-volatility surface for production valuation.
+
+## Finding 4: estimation uncertainty is material
+
+Historical VaR is A$32,777, while its moving-block bootstrap 95% interval is approximately A$28,756 to A$41,751. The interval spans both sides of the A$35,000 limit, showing that a point-estimate-only process can create false precision around escalation decisions.
+
+## Efficiency and control outcome
+
+The expanded run produces 31 tables and approximately 9,600 rows in under seven seconds of core analytics on the development machine. The vectorised scenario benchmark is more than 400 times faster than the reconciled row-loop reference. Database writes now use parameter-budgeted chunks, so adding another rolling model does not exceed SQLite's bind-variable limit.
+
+The configured 130-to-10 minute workflow comparison implies a modelled 92.3% reduction in preparation time and 44 hours of monthly analyst capacity. These remain transparent planning assumptions, not realised employer savings. Accountable review, exception explanation, and escalation are retained as human controls.
 
 ## Recommended action
 
-1. Escalate the GARCH-t VaR limit breach for review rather than suppressing the challenger result.
-2. Monitor net and key-rate DV01 because aggregate DV01 hides the 2031 long versus 2035 hedge profile.
-3. Replace the synthetic listed-asset portfolio with approved desk positions and actual/hypothetical P&L before using the framework for production decisions.
-4. Validate PostgreSQL history and concurrency in CI before treating the reporting store as production-ready.
+1. Escalate the FHS and GARCH-t VaR breaches and compare conditional-model assumptions before approval.
+2. Monitor stress-scaled ES and liquidity buckets alongside one-day VaR.
+3. Use full revaluation when nonlinear approximation error exceeds the desk tolerance.
+4. Replace synthetic positions, realised option volatility, and modellability proxies with approved desk data before production use.

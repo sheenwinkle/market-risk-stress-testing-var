@@ -120,31 +120,42 @@ from treasury_scenarios
 group by scenario
 order by net_pnl_aud;
 
--- Risk limit utilisation and breaches for daily escalation.
+-- FRTB-inspired liquidity and stress-scaled Expected Shortfall.
 select
-    risk_type,
-    dimension,
-    round(observed_aud::numeric, 2) as observed_aud,
-    round(limit_aud::numeric, 2) as limit_aud,
-    round((utilisation_pct * 100)::numeric, 1) as utilisation_percent,
-    status
-from risk_limits
-order by utilisation_pct desc;
+    round(liquidity_adjusted_es_aud::numeric, 2) as liquidity_adjusted_es_aud,
+    round(stress_scaled_es_aud::numeric, 2) as stress_scaled_es_aud,
+    round(stress_scaling_factor::numeric, 3) as stress_scaling_factor,
+    stress_window_start,
+    stress_window_end
+from frtb_es_summary
+where run_id = (
+    select run_id from run_manifest order by generated_at_utc desc limit 1
+);
 
--- Model validation decision table.
+-- Expected Shortfall calibration diagnostics.
 select
     model,
+    observations,
     exceptions,
-    round((actual_exception_rate * 100)::numeric, 2) as exception_rate_percent,
-    round(kupiec_p_value::numeric, 4) as kupiec_p_value,
-    round(christoffersen_p_value::numeric, 4) as independence_p_value,
-    recent_250_exceptions,
-    basel_traffic_light,
-    overall_status
-from model_monitoring
-order by model;
+    round(z2_statistic::numeric, 4) as z2_statistic,
+    round(underestimation_p_value::numeric, 4) as underestimation_p_value,
+    round(realised_to_forecast_es_ratio::numeric, 3) as realised_to_forecast_es_ratio,
+    es_calibration_status
+from es_backtesting
+where run_id = (
+    select run_id from run_manifest order by generated_at_utc desc limit 1
+)
+order by abs(z2_statistic);
 
--- Evidence for operational-efficiency claims.
-select metric, round(value::numeric, 3) as value, unit, basis, interpretation
-from operational_efficiency
-order by metric;
+-- Nonlinear option scenario P&L and approximation error.
+select
+    scenario,
+    round(sum(full_revaluation_pnl_aud)::numeric, 2) as full_revaluation_pnl_aud,
+    round(sum(delta_gamma_vega_pnl_aud)::numeric, 2) as approximation_pnl_aud,
+    round(sum(approximation_error_aud)::numeric, 2) as approximation_error_aud
+from derivative_scenarios
+where run_id = (
+    select run_id from run_manifest order by generated_at_utc desc limit 1
+)
+group by scenario
+order by full_revaluation_pnl_aud;

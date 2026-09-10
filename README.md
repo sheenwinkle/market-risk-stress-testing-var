@@ -10,7 +10,7 @@ The deterministic demo run gives every result below from one command, so the cla
 
 | Area | Demonstrated result |
 |---|---:|
-| Core analytics | Approximately 5.2 seconds on the development machine |
+| Core analytics | Under 7 seconds on the development machine |
 | Batch scenario valuation | 50,000 scenarios x 8 positions |
 | Vectorisation benchmark | More than 400x faster than the transparent Python row-loop baseline on the development machine |
 | Automated reporting | 31 CSV/SQL-ready tables and approximately 9,600 rows per run |
@@ -152,18 +152,18 @@ ruff check .
 pytest
 ```
 
-The suite currently reports 18 passing tests plus one environment-gated PostgreSQL integration test. It covers tail-risk calculations, EWMA response, GARCH holdout forecasts, component VaR reconciliation, statistical backtesting, traffic-light boundaries, data lineage, scenario reconciliation, Treasury revaluation, snapshot idempotency, and the end-to-end SQL/reporting flow.
+The suite currently reports 25 passing tests plus one environment-gated PostgreSQL integration test. It covers FRTB-style ES reconciliation, FHS regime response, ES calibration, bootstrap uncertainty, Black-Scholes parity and Greeks, option full revaluation, GARCH holdout forecasts, statistical backtesting, data lineage, Treasury valuation, snapshot idempotency, and the end-to-end SQL/reporting flow.
 
 ## Resume bullets
 
-- Built an end-to-end Python/PostgreSQL market-risk control pipeline spanning an A$1m Australian financials proxy portfolio and a trade-level AUD rates/FX book, producing 25 governed reporting tables.
+- Built an end-to-end Python/PostgreSQL market-risk control pipeline spanning an A$1m Australian financials proxy portfolio plus trade-level rates, FX, and equity-option books, producing 31 governed reporting tables.
 - Implemented a governed FRTB-inspired 97.5% ES view across prescribed liquidity horizons; identified a 1.415 stress scalar and reconciled A$273k liquidity-adjusted to A$387k stress-scaled ES.
 - Priced fixed-rate bond cash flows and an AUD/USD forward from official RBA market data; calculated DV01, convexity, key-rate DV01, hedge offsets, and full-revaluation curve scenario P&L.
 - Built a three-trade Australian equity-options overlay with Black-Scholes Greeks and 500-shock full-revaluation VaR/ES; quantified A$564 delta-gamma-vega approximation error in an equity/volatility stress.
 - Implemented five VaR/ES models including Filtered Historical Simulation and Student-t GARCH; FHS produced 11 exceptions across 1,052 forecasts and passed coverage, independence, and ES calibration diagnostics.
 - Quantified estimation risk with moving-block bootstrap intervals, showing the A$32.8k historical VaR point estimate had an A$28.8k-A$41.8k 95% interval.
 - Benchmarked a vectorised 50,000-scenario, eight-position stress engine at more than 400x the speed of a reconciled Python row-loop reference on the development machine; documented machine-dependent evidence and workflow assumptions separately.
-- Automated position-level stress attribution, reverse-stress thresholds, configurable limit monitoring, SQL reporting, input lineage hashes, and a four-view Streamlit risk dashboard.
+- Automated position-level stress attribution, reverse-stress thresholds, configurable limit monitoring, SQL reporting, input lineage hashes, and a seven-view Streamlit risk dashboard.
 
 ## Limitations and next depth
 

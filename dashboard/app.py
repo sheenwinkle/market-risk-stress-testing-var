@@ -38,6 +38,14 @@ imputation_audit = read_report("imputation_audit")
 treasury_positions = read_report("treasury_positions")
 key_rate_dv01 = read_report("key_rate_dv01")
 treasury_scenarios = read_report("treasury_scenarios")
+frtb_summary = read_report("frtb_es_summary")
+frtb_buckets = read_report("frtb_liquidity_buckets")
+modellability = read_report("risk_factor_modellability")
+es_backtesting = read_report("es_backtesting")
+tail_uncertainty = read_report("tail_risk_uncertainty")
+derivative_positions = read_report("derivative_positions")
+derivative_scenarios = read_report("derivative_scenarios")
+derivative_risk = read_report("derivative_historical_risk")
 
 if risk_summary.empty:
     st.warning("Run `market-risk run` first to create reports.")
@@ -63,10 +71,20 @@ headline_cols[4].metric(
     "Core runtime", f"{efficiency_values.get('analytics_runtime_seconds', 0):.2f}s"
 )
 
-overview_tab, treasury_tab, validation_tab, stress_tab, controls_tab = st.tabs(
+(
+    overview_tab,
+    treasury_tab,
+    frtb_tab,
+    options_tab,
+    validation_tab,
+    stress_tab,
+    controls_tab,
+) = st.tabs(
     [
         "Risk overview",
         "Treasury book",
+        "FRTB & liquidity",
+        "Options",
         "Model validation",
         "Stress and attribution",
         "Controls and efficiency",
@@ -126,6 +144,13 @@ with validation_tab:
     st.dataframe(model_monitoring, use_container_width=True, hide_index=True)
     st.subheader("Backtesting detail")
     st.dataframe(backtest_summary, use_container_width=True, hide_index=True)
+    left, right = st.columns(2)
+    with left:
+        st.subheader("Expected Shortfall calibration")
+        st.dataframe(es_backtesting, use_container_width=True, hide_index=True)
+    with right:
+        st.subheader("Tail-risk estimation uncertainty")
+        st.dataframe(tail_uncertainty, use_container_width=True, hide_index=True)
 
 with treasury_tab:
     bond_rows = treasury_positions[treasury_positions["instrument_type"] == "fixed_rate_bond"]
@@ -152,6 +177,71 @@ with treasury_tab:
         scenario_view = treasury_scenarios.groupby("scenario", as_index=False)["pnl_aud"].sum()
         fig = px.bar(scenario_view, x="scenario", y="pnl_aud", text_auto=".2s")
         st.plotly_chart(fig, use_container_width=True)
+
+with frtb_tab:
+    frtb = frtb_summary.iloc[0]
+    frtb_metrics = st.columns(4)
+    frtb_metrics[0].metric(
+        "Liquidity-adjusted ES", f"A${frtb['liquidity_adjusted_es_aud']:,.0f}"
+    )
+    frtb_metrics[1].metric(
+        "Stress-scaled ES", f"A${frtb['stress_scaled_es_aud']:,.0f}"
+    )
+    frtb_metrics[2].metric("Stress scalar", f"{frtb['stress_scaling_factor']:.3f}x")
+    frtb_metrics[3].metric(
+        "Modellability proxy reviews",
+        int((modellability["modellability_proxy_status"] == "review").sum()),
+    )
+    left, right = st.columns(2)
+    with left:
+        st.subheader("Liquidity-horizon ES components")
+        fig = px.bar(
+            frtb_buckets,
+            x="liquidity_horizon_days",
+            y="scaled_es_component_aud",
+            text_auto=".2s",
+        )
+        st.plotly_chart(fig, use_container_width=True)
+    with right:
+        st.subheader("Risk-factor data availability")
+        st.dataframe(modellability, use_container_width=True, hide_index=True)
+    st.caption("FRTB-inspired management view; not a regulatory capital calculation.")
+
+with options_tab:
+    option_risk = derivative_risk.iloc[0]
+    option_metrics = st.columns(4)
+    option_metrics[0].metric(
+        "Option book value", f"A${option_risk['net_option_market_value_aud']:,.0f}"
+    )
+    option_metrics[1].metric(
+        "Full-revaluation VaR", f"A${option_risk['full_revaluation_var_aud']:,.0f}"
+    )
+    option_metrics[2].metric(
+        "Full-revaluation ES",
+        f"A${option_risk['full_revaluation_expected_shortfall_aud']:,.0f}",
+    )
+    option_metrics[3].metric("Historical shocks", int(option_risk["observations"]))
+    st.subheader("Trade-level Greeks")
+    st.dataframe(derivative_positions, use_container_width=True, hide_index=True)
+    st.subheader("Full revaluation versus delta-gamma-vega")
+    scenario_comparison = (
+        derivative_scenarios.groupby("scenario", as_index=False)[
+            ["full_revaluation_pnl_aud", "delta_gamma_vega_pnl_aud"]
+        ]
+        .sum()
+        .melt(id_vars="scenario", var_name="method", value_name="pnl_aud")
+    )
+    fig = px.bar(
+        scenario_comparison,
+        x="scenario",
+        y="pnl_aud",
+        color="method",
+        barmode="group",
+        text_auto=".2s",
+    )
+    st.plotly_chart(fig, use_container_width=True)
+    st.subheader("Approximation error by trade")
+    st.dataframe(derivative_scenarios, use_container_width=True, hide_index=True)
 
 with stress_tab:
     left, right = st.columns(2)

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "market-risk-stress-testing-var"
-version = "0.6.0"
+version = "0.7.0"
 description = "Market risk VaR, Expected Shortfall, backtesting, stress testing, and SQL reporting for an Australian bank-style portfolio."
 readme = "README.md"
 requires-python = ">=3.10"
