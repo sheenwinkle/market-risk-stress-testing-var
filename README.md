@@ -102,6 +102,11 @@ The scope and regulatory limitations are documented in `docs/model_methodology.m
 
 The quantified management narrative is available in `docs/case_study.md`.
 
+The public build-out plan is tracked in `docs/iteration_roadmap.md`. It mirrors
+the companion Risk Analytics Portfolio workflow: baseline the gap, add one
+role-relevant capability, quantify the result, document the evidence, then
+commit and push the iteration as a visible milestone.
+
 ## Portfolio and data
 
 The default configuration uses listed Australian financial names and liquid proxies: `CBA.AX`, `NAB.AX`, `WBC.AX`, `ANZ.AX`, `MQG.AX`, `QBE.AX`, `SUN.AX`, and `IAF.AX`. Risk factors are `^AXJO`, `AUDUSD=X`, and `IAF.AX`. A separate options book adds CBA and Macquarie protective, covered-call, and tail-risk structures using reproducible realised-volatility inputs.
