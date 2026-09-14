@@ -13,7 +13,7 @@ The deterministic demo run gives every result below from one command, so the cla
 | Core analytics | Under 7 seconds on the development machine |
 | Batch scenario valuation | 50,000 scenarios x 8 positions |
 | Vectorisation benchmark | More than 400x faster than the transparent Python row-loop baseline on the development machine |
-| Automated reporting | 36 CSV/SQL-ready tables and 10,944 rows per run |
+| Automated reporting | 37 CSV/SQL-ready tables and 10,952 rows per run |
 | Data controls | Raw completeness, freshness, source, validity, gaps, and imputation lineage |
 | Model validation | 5 models, VaR/ES tests, uncertainty, PLA-style P&L attribution, and RFET/NMRF evidence |
 | Risk monitoring | 9 configurable VaR, ES, and stress-limit tests |
@@ -113,6 +113,11 @@ The interview guide is available in `docs/interview_walkthrough.md`, including
 a 30-second pitch, GitHub live-demo path, personal contribution, quantified
 outputs, claim boundaries, common challenge responses, and project limitations.
 
+The APRA-aware boundary framework is available in
+`docs/apra_boundary_framework.md`. It maps project evidence to prudential
+themes such as APS 116, CPS 220, CPS 230, CPS 234, and RFET/NMRF, while clearly
+stating that the project is portfolio evidence rather than regulatory approval.
+
 The public build-out plan is tracked in `docs/iteration_roadmap.md`. It mirrors
 the companion Risk Analytics Portfolio workflow: baseline the gap, add one
 role-relevant capability, quantify the result, document the evidence, then
@@ -159,7 +164,7 @@ python -m market_risk.cli run --database-url postgresql+psycopg2://risk_user:ris
 
 ## Output pack
 
-Each run produces 36 database-ready tables, including model risk, FRTB-inspired ES, stress, controls, rates/FX valuation, option full revaluation, desk P&L attribution, RFET public-data evidence, and NMRF fallback stress. Key additions include `desk_pnl_daily`, `pnl_attribution_summary`, `pnl_factor_betas`, `rfet_observation_evidence`, and `nmrf_stress_fallback`. It also writes `reports/management_summary.md` for a risk-manager view.
+Each run produces 37 database-ready tables, including model risk, FRTB-inspired ES, stress, controls, rates/FX valuation, option full revaluation, desk P&L attribution, RFET public-data evidence, NMRF fallback stress, and `prudential_evidence_map`. It also writes `reports/management_summary.md` for a risk-manager view.
 
 ## Verification
 
@@ -168,11 +173,11 @@ ruff check .
 pytest
 ```
 
-The suite currently reports 27 passing tests plus one environment-gated PostgreSQL integration test. It covers FRTB-style ES reconciliation, FHS regime response, RFET/NMRF evidence, ES calibration, bootstrap uncertainty, PLA-style P&L attribution, Black-Scholes parity and Greeks, option full revaluation, GARCH holdout forecasts, statistical backtesting, data lineage, Treasury valuation, snapshot idempotency, and the end-to-end SQL/reporting flow.
+The suite currently reports 28 passing tests plus one environment-gated PostgreSQL integration test. It covers FRTB-style ES reconciliation, FHS regime response, RFET/NMRF evidence, APRA-aware boundary mapping, ES calibration, bootstrap uncertainty, PLA-style P&L attribution, Black-Scholes parity and Greeks, option full revaluation, GARCH holdout forecasts, statistical backtesting, data lineage, Treasury valuation, snapshot idempotency, and the end-to-end SQL/reporting flow.
 
 ## Resume bullets
 
-- Built an end-to-end Python/PostgreSQL market-risk control pipeline spanning an A$1m Australian financials proxy portfolio plus trade-level rates, FX, equity-option, RFET/NMRF, and desk P&L attribution layers, producing 36 governed reporting tables.
+- Built an end-to-end Python/PostgreSQL market-risk control pipeline spanning an A$1m Australian financials proxy portfolio plus trade-level rates, FX, equity-option, RFET/NMRF, APRA-aware evidence mapping, and desk P&L attribution layers, producing 37 governed reporting tables.
 - Implemented a governed FRTB-inspired 97.5% ES view across prescribed liquidity horizons; identified a 1.415 stress scalar and reconciled A$273k liquidity-adjusted to A$387k stress-scaled ES.
 - Priced fixed-rate bond cash flows and an AUD/USD forward from official RBA market data; calculated DV01, convexity, key-rate DV01, hedge offsets, and full-revaluation curve scenario P&L.
 - Built a three-trade Australian equity-options overlay with Black-Scholes Greeks and 500-shock full-revaluation VaR/ES; quantified A$564 delta-gamma-vega approximation error in an equity/volatility stress.

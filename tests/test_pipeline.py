@@ -40,6 +40,7 @@ def test_pipeline_creates_reports_and_sqlite_database(tmp_path: Path):
     assert (tmp_path / "reports" / "desk_pnl_daily.csv").exists()
     assert (tmp_path / "reports" / "pnl_attribution_summary.csv").exists()
     assert (tmp_path / "reports" / "pnl_factor_betas.csv").exists()
+    assert (tmp_path / "reports" / "prudential_evidence_map.csv").exists()
     assert (tmp_path / "reports" / "run_manifest.csv").exists()
     assert set(result.risk_limits["status"]) <= {"pass", "breach"}
     management_summary = (tmp_path / "reports" / "management_summary.md").read_text()
@@ -74,3 +75,9 @@ def test_pipeline_creates_reports_and_sqlite_database(tmp_path: Path):
     rfet = pd.read_csv(tmp_path / "reports" / "rfet_observation_evidence.csv")
     assert (rfet["regulatory_rfet_pass"] == False).all()
     assert set(rfet["public_frequency_proxy_status"]) <= {"pass", "watch", "review"}
+
+    prudential = pd.read_csv(tmp_path / "reports" / "prudential_evidence_map.csv")
+    assert {"APS 116", "CPS 220", "CPS 230", "CPS 234"} <= set(
+        prudential["prudential_reference"]
+    )
+    assert set(prudential["portfolio_claim_status"]) == {"portfolio_evidence_only"}

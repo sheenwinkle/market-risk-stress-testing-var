@@ -11,7 +11,7 @@ How do model choice, market liquidity, and nonlinear hedges change the risk deci
 - Treasury book: three signed Australian Government bond positions and one AUD/USD forward.
 - Derivatives overlay: three CBA/Macquarie equity options with trade-level Greeks and full revaluation.
 - Validation: five VaR/ES models, 802 common holdout days, ES calibration, and bootstrap uncertainty.
-- Reporting: 36 CSV/SQL-ready tables and 10,944 rows per governed run.
+- Reporting: 37 CSV/SQL-ready tables and 10,952 rows per governed run.
 
 The deterministic market series keeps every result reproducible. Public downloads can replace it without changing the controlled pipeline.
 
@@ -59,7 +59,7 @@ The NMRF fallback table makes the consequence tangible even when no factor is tr
 
 ## Efficiency and control outcome
 
-The expanded run produces 36 tables and 10,944 rows in under seven seconds of core analytics on the development machine. The vectorised scenario benchmark is more than 400 times faster than the reconciled row-loop reference. Database writes now use parameter-budgeted chunks, so adding another rolling model, PLA output, or RFET/NMRF table does not exceed SQLite's bind-variable limit.
+The expanded run produces 37 tables and 10,952 rows in under seven seconds of core analytics on the development machine. The vectorised scenario benchmark is more than 400 times faster than the reconciled row-loop reference. Database writes now use parameter-budgeted chunks, so adding another rolling model, PLA output, RFET/NMRF table, or APRA-aware evidence map does not exceed SQLite's bind-variable limit.
 
 The configured 130-to-10 minute workflow comparison implies a modelled 92.3% reduction in preparation time and 44 hours of monthly analyst capacity. These remain transparent planning assumptions, not realised employer savings. Accountable review, exception explanation, and escalation are retained as human controls.
 

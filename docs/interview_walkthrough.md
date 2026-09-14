@@ -11,11 +11,25 @@ bank-style treasury portfolio. It turns reproducible market data into a daily
 risk pack covering VaR, Expected Shortfall, stress testing, FRTB-inspired
 liquidity-horizon ES, nonlinear option full revaluation, PLA-style desk P&L
 attribution, RFET/NMRF evidence, PostgreSQL reporting, and a Streamlit
-dashboard. The latest deterministic run produces 36 governed reporting tables,
-10,944 rows, 27 passing tests, and a management summary in under seven seconds
+dashboard. The latest deterministic run produces 37 governed reporting tables,
+10,952 rows, 28 passing tests, and a management summary in under seven seconds
 of core analytics on my development machine. The value is not just a model; it
 is a controlled workflow that makes model validation, stress explanation, data
 lineage, and efficiency evidence reproducible.
+
+## APRA-aware framing
+
+This is the safest way to describe the prudential angle:
+
+> I used APRA standards as a framing discipline, not as a compliance claim. The
+> project maps outputs to prudential themes such as APS 116, CPS 220, CPS 230,
+> CPS 234, and RFET/NMRF evidence, then states the exact boundary of each claim.
+> That makes the project more credible for risk analytics interviews because it
+> shows I understand both the analytics and the evidence a regulated institution
+> would still need.
+
+Show `docs/apra_boundary_framework.md` and `reports/prudential_evidence_map.csv`
+when the interviewer asks whether the project is meant to be production-grade.
 
 ## GitHub live demo path
 
@@ -44,8 +58,11 @@ Use this order in a live screen share:
    charts.
 7. Open `dashboard/app.py`.
    Show the dashboard tabs as the presentation layer for risk managers.
-8. Open `tests/`.
-   Mention the latest local validation: `27 passed, 1 skipped`; the skipped
+8. Open `docs/apra_boundary_framework.md`.
+   Use this to show that the project is APRA-aware without pretending to be an
+   approved regulatory system.
+9. Open `tests/`.
+   Mention the latest local validation: `28 passed, 1 skipped`; the skipped
    test is PostgreSQL integration gated by `TEST_DATABASE_URL`.
 
 If running live:
@@ -92,9 +109,9 @@ The deterministic demo currently produces:
 
 | Evidence | Result |
 |---|---:|
-| Governed reporting tables | 36 |
-| Reporting rows | 10,944 |
-| Tests | 27 passed, 1 PostgreSQL test skipped without `TEST_DATABASE_URL` |
+| Governed reporting tables | 37 |
+| Reporting rows | 10,952 |
+| Tests | 28 passed, 1 PostgreSQL test skipped without `TEST_DATABASE_URL` |
 | Core analytics runtime | Under 7 seconds on the development machine |
 | Scenario benchmark | More than 400x faster than the row-loop reference |
 | Portfolio value | A$1,000,000 |

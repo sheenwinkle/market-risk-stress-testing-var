@@ -32,6 +32,7 @@ from market_risk.model_validation import (
     es_calibration_backtest,
 )
 from market_risk.pla import pnl_attribution_report
+from market_risk.prudential import prudential_evidence_map
 from market_risk.rfet import risk_factor_evidence_report
 from market_risk.risk_models import (
     component_var,
@@ -212,6 +213,7 @@ def run_pipeline(
     benchmark = scenario_performance_benchmark(config)
     treasury_tables = value_treasury_book(treasury_book_path, rba_data_dir)
     derivative_tables = value_derivatives_book(derivatives_book_path, prices, asset_returns)
+    prudential_evidence = prudential_evidence_map()
 
     report_dir = Path(report_dir)
     database_url = database_url or sqlite_url(report_dir / "risk_reports.db")
@@ -245,6 +247,7 @@ def run_pipeline(
         "risk_limits": limits,
         "performance_benchmark": benchmark,
         "run_manifest": run_manifest,
+        "prudential_evidence_map": prudential_evidence,
         **treasury_tables,
         **derivative_tables,
     }

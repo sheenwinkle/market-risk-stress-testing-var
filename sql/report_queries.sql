@@ -220,3 +220,18 @@ where run_id = (
     select run_id from run_manifest order by generated_at_utc desc limit 1
 )
 order by fallback_nmrf_stress_loss_aud desc;
+
+-- APRA-aware boundary map for interview and portfolio review.
+select
+    prudential_reference,
+    theme,
+    project_evidence,
+    demonstrated_capability,
+    boundary_statement,
+    production_evidence_needed,
+    portfolio_claim_status
+from prudential_evidence_map
+where run_id = (
+    select run_id from run_manifest order by generated_at_utc desc limit 1
+)
+order by prudential_reference, theme;

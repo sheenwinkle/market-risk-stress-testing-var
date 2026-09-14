@@ -33,6 +33,7 @@ SNAPSHOT_TABLES = {
     "performance_benchmark",
     "operational_efficiency",
     "run_manifest",
+    "prudential_evidence_map",
     "treasury_positions",
     "key_rate_dv01",
     "treasury_scenarios",

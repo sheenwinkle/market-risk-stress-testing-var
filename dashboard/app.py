@@ -51,6 +51,7 @@ derivative_risk = read_report("derivative_historical_risk")
 desk_pnl = read_report("desk_pnl_daily")
 pla_summary = read_report("pnl_attribution_summary")
 pla_betas = read_report("pnl_factor_betas")
+prudential_evidence = read_report("prudential_evidence_map")
 
 if risk_summary.empty:
     st.warning("Run `market-risk run` first to create reports.")
@@ -342,3 +343,5 @@ with controls_tab:
     st.dataframe(efficiency, use_container_width=True, hide_index=True)
     st.subheader("Scenario engine benchmark")
     st.dataframe(benchmark, use_container_width=True, hide_index=True)
+    st.subheader("APRA-aware portfolio boundary map")
+    st.dataframe(prudential_evidence, use_container_width=True, hide_index=True)
