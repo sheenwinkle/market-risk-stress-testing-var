@@ -32,6 +32,7 @@ from market_risk.model_validation import (
     es_calibration_backtest,
 )
 from market_risk.pla import pnl_attribution_report
+from market_risk.rfet import risk_factor_evidence_report
 from market_risk.risk_models import (
     component_var,
     ewma_var_es,
@@ -200,6 +201,13 @@ def run_pipeline(
         config.value_aud,
         float(config.frtb.get("confidence_level", 0.975)),
     )
+    rfet = risk_factor_evidence_report(
+        raw_prices,
+        asset_returns,
+        config.weights,
+        liquidity_horizons,
+        config.value_aud,
+    )
     limits = risk_limit_report(risk_summary, stress_results, config)
     benchmark = scenario_performance_benchmark(config)
     treasury_tables = value_treasury_book(treasury_book_path, rba_data_dir)
@@ -230,6 +238,8 @@ def run_pipeline(
         "frtb_es_summary": frtb.summary,
         "frtb_liquidity_buckets": frtb.liquidity_buckets,
         "risk_factor_modellability": frtb.modellability_proxy,
+        "rfet_observation_evidence": rfet.observation_evidence,
+        "nmrf_stress_fallback": rfet.nmrf_fallback,
         "data_quality": data_quality,
         "imputation_audit": imputation_audit,
         "risk_limits": limits,
@@ -260,6 +270,7 @@ def run_pipeline(
         derivative_tables["derivative_historical_risk"],
         derivative_tables["derivative_scenarios"],
         pla.summary,
+        rfet.observation_evidence,
     )
     (report_dir / "management_summary.md").write_text(summary, encoding="utf-8")
 

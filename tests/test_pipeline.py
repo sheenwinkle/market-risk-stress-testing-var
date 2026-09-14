@@ -30,6 +30,8 @@ def test_pipeline_creates_reports_and_sqlite_database(tmp_path: Path):
     assert (tmp_path / "reports" / "frtb_es_summary.csv").exists()
     assert (tmp_path / "reports" / "frtb_liquidity_buckets.csv").exists()
     assert (tmp_path / "reports" / "risk_factor_modellability.csv").exists()
+    assert (tmp_path / "reports" / "rfet_observation_evidence.csv").exists()
+    assert (tmp_path / "reports" / "nmrf_stress_fallback.csv").exists()
     assert (tmp_path / "reports" / "es_backtesting.csv").exists()
     assert (tmp_path / "reports" / "tail_risk_uncertainty.csv").exists()
     assert (tmp_path / "reports" / "derivative_positions.csv").exists()
@@ -44,6 +46,7 @@ def test_pipeline_creates_reports_and_sqlite_database(tmp_path: Path):
     assert "FRTB-inspired 97.5% ES" in management_summary
     assert "Option overlay" in management_summary
     assert "P&L attribution" in management_summary
+    assert "RFET public-data proxy" in management_summary
 
     stress = pd.read_csv(tmp_path / "reports" / "stress_results.csv")
     assert stress["loss_aud"].max() > 0
@@ -67,3 +70,7 @@ def test_pipeline_creates_reports_and_sqlite_database(tmp_path: Path):
         "hypothetical_vs_risk_theoretical",
     }
     assert set(pla_summary["pla_status"]) <= {"pass", "watch", "review"}
+
+    rfet = pd.read_csv(tmp_path / "reports" / "rfet_observation_evidence.csv")
+    assert (rfet["regulatory_rfet_pass"] == False).all()
+    assert set(rfet["public_frequency_proxy_status"]) <= {"pass", "watch", "review"}

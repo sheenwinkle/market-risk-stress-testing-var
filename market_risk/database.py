@@ -16,6 +16,8 @@ SNAPSHOT_TABLES = {
     "frtb_es_summary",
     "frtb_liquidity_buckets",
     "risk_factor_modellability",
+    "rfet_observation_evidence",
+    "nmrf_stress_fallback",
     "stress_results",
     "stress_contributions",
     "reverse_stress",

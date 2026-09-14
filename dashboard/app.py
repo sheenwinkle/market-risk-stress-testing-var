@@ -41,6 +41,8 @@ treasury_scenarios = read_report("treasury_scenarios")
 frtb_summary = read_report("frtb_es_summary")
 frtb_buckets = read_report("frtb_liquidity_buckets")
 modellability = read_report("risk_factor_modellability")
+rfet_evidence = read_report("rfet_observation_evidence")
+nmrf_fallback = read_report("nmrf_stress_fallback")
 es_backtesting = read_report("es_backtesting")
 tail_uncertainty = read_report("tail_risk_uncertainty")
 derivative_positions = read_report("derivative_positions")
@@ -194,8 +196,8 @@ with frtb_tab:
     )
     frtb_metrics[2].metric("Stress scalar", f"{frtb['stress_scaling_factor']:.3f}x")
     frtb_metrics[3].metric(
-        "Modellability proxy reviews",
-        int((modellability["modellability_proxy_status"] == "review").sum()),
+        "RFET proxy watch/review",
+        int((rfet_evidence["public_frequency_proxy_status"] != "pass").sum()),
     )
     left, right = st.columns(2)
     with left:
@@ -210,6 +212,10 @@ with frtb_tab:
     with right:
         st.subheader("Risk-factor data availability")
         st.dataframe(modellability, use_container_width=True, hide_index=True)
+    st.subheader("RFET public-data evidence")
+    st.dataframe(rfet_evidence, use_container_width=True, hide_index=True)
+    st.subheader("NMRF fallback stress if a factor is deemed non-modellable")
+    st.dataframe(nmrf_fallback, use_container_width=True, hide_index=True)
     st.caption("FRTB-inspired management view; not a regulatory capital calculation.")
 
 with options_tab:

@@ -148,6 +148,7 @@ def render_management_summary(
     derivative_risk: pd.DataFrame,
     derivative_scenarios: pd.DataFrame,
     pnl_attribution: pd.DataFrame,
+    rfet_evidence: pd.DataFrame,
 ) -> str:
     metrics = efficiency.set_index("metric")["value"]
     worst_stress = stress_results.sort_values("loss_aud", ascending=False).iloc[0]
@@ -173,6 +174,7 @@ def render_management_summary(
         f"MAE {row['mean_abs_error_pct_of_avg_abs_pnl']:.1%})"
         for _, row in pnl_attribution.iterrows()
     )
+    rfet_watchlist = rfet_evidence[rfet_evidence["public_frequency_proxy_status"] != "pass"]
 
     model_lines = "\n".join(
         f"- {model}: VaR A${row['var']:,.0f}; ES A${row['expected_shortfall']:,.0f}."
@@ -194,6 +196,7 @@ def render_management_summary(
 - ES calibration closest to zero: **{best_es_model['model']}** (Z2-style statistic {best_es_model['z2_statistic']:.3f}, status {best_es_model['es_calibration_status']}).
 - Option overlay: **A${option_risk['full_revaluation_var_aud']:,.0f} full-revaluation VaR**; worst configured option P&L {option_stress_text}.
 - P&L attribution: **{len(pla_watchlist)} comparison(s) require watch/review**; {pla_headline}.
+- RFET public-data proxy: **{len(rfet_watchlist)} factor(s) require watch/review** across {len(rfet_evidence)} factors; regulatory RFET remains false because public closes do not prove real-price evidence.
 
 ## Operating efficiency
 

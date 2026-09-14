@@ -36,3 +36,9 @@ Synthetic data is intentionally stale relative to live reporting and can fail th
 `pnl_attribution_summary` contains the model-validation decision metrics: correlation, distribution distance, mean absolute error, variance ratio, tail capture, and `pla_status`.
 
 `pnl_factor_betas` records the OLS betas that map each configured portfolio asset to the selected market, FX, and rates factors. This table is the bridge between risk-theoretical P&L and the configured public risk factors.
+
+## RFET and NMRF outputs
+
+`rfet_observation_evidence` records the public-data frequency proxy for each risk factor: trailing observations, represented months, maximum and median gaps, proxy status, evidence type, and a clear flag that regulatory RFET is not passed by public closes alone.
+
+`nmrf_stress_fallback` records the liquidity-horizon-scaled standalone stress loss that would be reviewed if a risk factor were deemed non-modellable. The table distinguishes public proxy triggers from capital calculation; `capital_measure` is false.

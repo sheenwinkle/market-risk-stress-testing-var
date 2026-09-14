@@ -77,6 +77,12 @@ The output includes a data-availability proxy showing trailing observations, rep
 
 The Basel market-risk framework specifies 97.5% ES, a 10-day base horizon, prescribed liquidity horizons, stress calibration, and risk-factor modellability in the internal-models approach: [Basel Framework MAR33](https://www.bis.org/basel_framework/chapter/MAR/33.htm). This implementation is a governed management-risk demonstrator, not an FRTB capital number.
 
+### RFET and NMRF demonstrator
+
+The RFET module separates public frequency evidence from regulatory evidence. It records 12-month observation counts, represented months, maximum gaps, evidence type, and a public-frequency proxy status for each configured risk factor. Regulatory RFET pass is always false because the project uses public closing prices, not real-price trade or committed-quote evidence.
+
+For each factor, the NMRF fallback table calculates a standalone stressed loss estimate using liquidity-horizon-scaled Expected Shortfall. This is not capital, but it makes the consequence of non-modellability concrete: if a factor lacks acceptable evidence, the model can show which fallback stress exposure would require review.
+
 ## AUD rates and FX valuation
 
 The Treasury module discounts signed fixed-rate bond cash flows against the latest common-date RBA zero curve. Zero rates are linearly interpolated by maturity and applied with continuous compounding. Parallel one-basis-point revaluation produces DV01; symmetric up/down bumps produce convexity; individual pillar bumps produce key-rate DV01.

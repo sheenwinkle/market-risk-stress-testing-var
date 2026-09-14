@@ -11,7 +11,7 @@ How do model choice, market liquidity, and nonlinear hedges change the risk deci
 - Treasury book: three signed Australian Government bond positions and one AUD/USD forward.
 - Derivatives overlay: three CBA/Macquarie equity options with trade-level Greeks and full revaluation.
 - Validation: five VaR/ES models, 802 common holdout days, ES calibration, and bootstrap uncertainty.
-- Reporting: 34 CSV/SQL-ready tables and 10,928 rows per governed run.
+- Reporting: 36 CSV/SQL-ready tables and 10,944 rows per governed run.
 
 The deterministic market series keeps every result reproducible. Public downloads can replace it without changing the controlled pipeline.
 
@@ -51,9 +51,15 @@ The P&L attribution layer creates actual, hypothetical, and risk-theoretical P&L
 
 Hypothetical versus risk-theoretical P&L is more informative. It has a strong Spearman correlation of 0.952, so the factor model explains the daily direction and ranking well. It is still flagged `watch` because mean absolute error is 28.8% of average absolute P&L. That is the interview-relevant result: a market-risk analyst should not approve the factor model just because correlation is high; residual size, distribution fit, and tail capture still need review.
 
+## Finding 6: RFET evidence must distinguish public frequency from real prices
+
+The RFET public-data proxy reports 8 risk factors with 261 observations, 12 represented months, and a three-day maximum gap over the latest year. All 8 pass the public-frequency proxy. The regulatory RFET flag remains false for every factor because public closes do not prove trades, committed quotes, or other real-price evidence.
+
+The NMRF fallback table makes the consequence tangible even when no factor is triggered by the proxy. The largest standalone fallback stress estimate is NAB.AX at approximately A$55.6k, followed by CBA.AX at approximately A$55.4k. This gives an interviewer a clear discussion point: the workflow can quantify the exposure, while the public project honestly cannot assert regulatory modellability.
+
 ## Efficiency and control outcome
 
-The expanded run produces 34 tables and 10,928 rows in under seven seconds of core analytics on the development machine. The vectorised scenario benchmark is more than 400 times faster than the reconciled row-loop reference. Database writes now use parameter-budgeted chunks, so adding another rolling model or PLA output does not exceed SQLite's bind-variable limit.
+The expanded run produces 36 tables and 10,944 rows in under seven seconds of core analytics on the development machine. The vectorised scenario benchmark is more than 400 times faster than the reconciled row-loop reference. Database writes now use parameter-budgeted chunks, so adding another rolling model, PLA output, or RFET/NMRF table does not exceed SQLite's bind-variable limit.
 
 The configured 130-to-10 minute workflow comparison implies a modelled 92.3% reduction in preparation time and 44 hours of monthly analyst capacity. These remain transparent planning assumptions, not realised employer savings. Accountable review, exception explanation, and escalation are retained as human controls.
 
@@ -63,4 +69,4 @@ The configured 130-to-10 minute workflow comparison implies a modelled 92.3% red
 2. Monitor stress-scaled ES and liquidity buckets alongside one-day VaR.
 3. Use full revaluation when nonlinear approximation error exceeds the desk tolerance.
 4. Investigate risk-theoretical P&L residuals before relying on the factor model for desk validation.
-5. Replace synthetic positions, realised option volatility, PLA demonstrator actual P&L, and modellability proxies with approved desk data before production use.
+5. Replace synthetic positions, realised option volatility, PLA demonstrator actual P&L, public RFET proxies, and modellability proxies with approved desk data before production use.

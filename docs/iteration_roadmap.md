@@ -42,9 +42,9 @@ progression from baseline analytics to deeper market-risk controls.
 
 | Iteration | Capability | Why it matters for jobs | Acceptance evidence |
 |---|---|---|---|
-| 1 | Workflow roadmap and scorecard | Shows the project is managed like a risk analytics portfolio, not a one-off script | This document plus README reference |
-| 2 | Desk P&L attribution / PLA-style diagnostics | Connects VaR models to actual desk P&L and model validation conversations | Actual, hypothetical, risk-theoretical P&L tables; correlation/error tests; summary status |
-| 3 | RFET / NMRF demonstration | Adds FRTB-style risk-factor evidence and explains data limitations transparently | Observation counts, gap days, eligibility flags, stress fallback |
+| 1 | Workflow roadmap and scorecard | Shows the project is managed like a risk analytics portfolio, not a one-off script | Complete: `docs: add portfolio iteration roadmap` |
+| 2 | Desk P&L attribution / PLA-style diagnostics | Connects VaR models to actual desk P&L and model validation conversations | Complete: actual, hypothetical, risk-theoretical P&L tables; correlation/error tests; summary status |
+| 3 | RFET / NMRF demonstration | Adds FRTB-style risk-factor evidence and explains data limitations transparently | Complete: observation counts, gap days, real-price limitation flags, fallback stress |
 | 4 | Scenario explainability pack | Makes stress and reverse-stress output interview-friendly for treasury risk | Top drivers, hedges, sensitivity bridge, SQL query |
 | 5 | Scheduled control run pack | Makes operational efficiency measurable beyond local manual runs | Run log, exception queue, elapsed-time trend, control-owner summary |
 

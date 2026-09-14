@@ -190,3 +190,33 @@ where run_id = (
 )
 order by abs(hypothetical_minus_risk_theoretical_aud) desc
 limit 10;
+
+-- RFET public-data proxy evidence; regulatory RFET remains false without real-price evidence.
+select
+    risk_factor,
+    liquidity_horizon_days,
+    public_observations_12m,
+    distinct_months_12m,
+    max_gap_days,
+    public_frequency_proxy_status,
+    missing_real_price_evidence,
+    regulatory_rfet_pass
+from rfet_observation_evidence
+where run_id = (
+    select run_id from run_manifest order by generated_at_utc desc limit 1
+)
+order by public_frequency_proxy_status desc, risk_factor;
+
+-- NMRF fallback stress view if a factor is deemed non-modellable.
+select
+    risk_factor,
+    round(portfolio_weight::numeric, 4) as portfolio_weight,
+    liquidity_horizon_days,
+    round(fallback_nmrf_stress_loss_aud::numeric, 2) as fallback_nmrf_stress_loss_aud,
+    fallback_triggered_by_public_proxy,
+    public_frequency_proxy_status
+from nmrf_stress_fallback
+where run_id = (
+    select run_id from run_manifest order by generated_at_utc desc limit 1
+)
+order by fallback_nmrf_stress_loss_aud desc;
