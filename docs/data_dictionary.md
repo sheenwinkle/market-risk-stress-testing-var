@@ -28,3 +28,11 @@ The downloader writes a catalog containing the exact source URL, provider, UTC r
 - `source_type`: `synthetic_demo`, `yahoo_finance`, or `unknown` for legacy/unlabelled files.
 
 Synthetic data is intentionally stale relative to live reporting and can fail the freshness check. That is evidence that the control is active, not a pipeline failure.
+
+## P&L attribution outputs
+
+`desk_pnl_daily` contains the daily actual, hypothetical, and risk-theoretical P&L series used for PLA-style review. In the public demonstrator, actual P&L is deterministic and reproducible; in a production desk it would be sourced from an approved front-office ledger.
+
+`pnl_attribution_summary` contains the model-validation decision metrics: correlation, distribution distance, mean absolute error, variance ratio, tail capture, and `pla_status`.
+
+`pnl_factor_betas` records the OLS betas that map each configured portfolio asset to the selected market, FX, and rates factors. This table is the bridge between risk-theoretical P&L and the configured public risk factors.

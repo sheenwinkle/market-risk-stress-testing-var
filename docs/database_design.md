@@ -2,7 +2,7 @@
 
 ## Snapshot history
 
-Risk, model, stress, control, efficiency, and Treasury outputs are append-only snapshots keyed by `run_id`. A repeated execution with the same input and configuration hashes deletes and rewrites only that run, making retries idempotent. A changed input or configuration creates a new run ID and preserves the prior result.
+Risk, model, stress, control, efficiency, Treasury, derivatives, and P&L attribution outputs are append-only snapshots keyed by `run_id`. A repeated execution with the same input and configuration hashes deletes and rewrites only that run, making retries idempotent. A changed input or configuration creates a new run ID and preserves the prior result.
 
 Large reusable market-data tables (`prices`, `asset_returns`, `portfolio_returns`, and `var_backtest`) are refreshed as current analytical datasets. Snapshot tables retain the decision and governance history without duplicating every source observation on each run.
 

@@ -31,6 +31,7 @@ from market_risk.model_validation import (
     block_bootstrap_tail_uncertainty,
     es_calibration_backtest,
 )
+from market_risk.pla import pnl_attribution_report
 from market_risk.risk_models import (
     component_var,
     ewma_var_es,
@@ -186,6 +187,7 @@ def run_pipeline(
     historical_stress = historical_stress_windows(portfolio_return_series, config.value_aud)
     sensitivities = factor_sensitivities(portfolio_return_series, factor_returns)
     cvar = component_var(asset_returns, config.weights, config.confidence_level, config.value_aud)
+    pla = pnl_attribution_report(asset_returns, factor_returns, config.weights, config.value_aud)
     liquidity_horizons = {
         ticker: int(metadata.get("liquidity_horizon_days", 20))
         for ticker, metadata in config.assets.items()
@@ -222,6 +224,9 @@ def run_pipeline(
         "historical_stress": historical_stress,
         "factor_sensitivities": sensitivities,
         "component_var": cvar,
+        "desk_pnl_daily": pla.daily,
+        "pnl_attribution_summary": pla.summary,
+        "pnl_factor_betas": pla.factor_betas,
         "frtb_es_summary": frtb.summary,
         "frtb_liquidity_buckets": frtb.liquidity_buckets,
         "risk_factor_modellability": frtb.modellability_proxy,
@@ -254,6 +259,7 @@ def run_pipeline(
         es_backtesting,
         derivative_tables["derivative_historical_risk"],
         derivative_tables["derivative_scenarios"],
+        pla.summary,
     )
     (report_dir / "management_summary.md").write_text(summary, encoding="utf-8")
 

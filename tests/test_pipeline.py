@@ -35,11 +35,15 @@ def test_pipeline_creates_reports_and_sqlite_database(tmp_path: Path):
     assert (tmp_path / "reports" / "derivative_positions.csv").exists()
     assert (tmp_path / "reports" / "derivative_scenarios.csv").exists()
     assert (tmp_path / "reports" / "derivative_historical_risk.csv").exists()
+    assert (tmp_path / "reports" / "desk_pnl_daily.csv").exists()
+    assert (tmp_path / "reports" / "pnl_attribution_summary.csv").exists()
+    assert (tmp_path / "reports" / "pnl_factor_betas.csv").exists()
     assert (tmp_path / "reports" / "run_manifest.csv").exists()
     assert set(result.risk_limits["status"]) <= {"pass", "breach"}
     management_summary = (tmp_path / "reports" / "management_summary.md").read_text()
     assert "FRTB-inspired 97.5% ES" in management_summary
     assert "Option overlay" in management_summary
+    assert "P&L attribution" in management_summary
 
     stress = pd.read_csv(tmp_path / "reports" / "stress_results.csv")
     assert stress["loss_aud"].max() > 0
@@ -56,3 +60,10 @@ def test_pipeline_creates_reports_and_sqlite_database(tmp_path: Path):
     manifest = pd.read_csv(tmp_path / "reports" / "run_manifest.csv")
     assert manifest.loc[0, "price_rows"] > 1_000
     assert len(manifest.loc[0, "prices_sha256"]) == 64
+
+    pla_summary = pd.read_csv(tmp_path / "reports" / "pnl_attribution_summary.csv")
+    assert set(pla_summary["comparison"]) == {
+        "actual_vs_hypothetical",
+        "hypothetical_vs_risk_theoretical",
+    }
+    assert set(pla_summary["pla_status"]) <= {"pass", "watch", "review"}

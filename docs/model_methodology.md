@@ -36,6 +36,18 @@ The method is based on the framework tested by Barone-Adesi, Giannopoulos, and V
 
 Component VaR uses covariance allocation and reconciles to total volatility VaR. OLS factor sensitivity estimates portfolio beta to the configured ASX 200, AUD/USD, and rates proxies. These are linear local approximations and should not be interpreted as trade-level Greeks.
 
+### Desk P&L attribution
+
+The pipeline produces a desk-level P&L attribution demonstrator with three daily series:
+
+- Actual P&L: hypothetical portfolio P&L plus a deterministic desk adjustment that represents funding, residual leakage, and other front-office effects.
+- Hypothetical P&L: clean P&L from unchanged positions and observed asset returns.
+- Risk-theoretical P&L: factor-model P&L from OLS betas to the configured market, FX, and rates factors.
+
+The summary compares actual versus hypothetical and hypothetical versus risk-theoretical P&L using Pearson and Spearman correlation, a two-sample Kolmogorov-Smirnov statistic, mean absolute error, tail capture, and variance ratio. This is a model-validation control inspired by desk P&L attribution practice, not a regulatory PLA test.
+
+The actual P&L series is still synthetic because public data does not provide official front-office P&L, trade amendments, fees, reserves, or intraday valuation marks. Its value is to show the workflow, diagnostics, and evidence tables that would be expected once private desk data is available.
+
 ## Validation controls
 
 Every model is tested with rolling one-day-ahead forecasts. The pack reports:
@@ -90,5 +102,5 @@ Known limitations must be visible in any demonstration:
 - Synthetic demo prices contain designed volatility clusters and are not evidence of real portfolio performance.
 - Public end-of-day adjusted prices do not represent intraday trading P&L or instrument revaluation.
 - Static weights omit trading, cash flows, corporate actions beyond adjusted-price handling, and FX translation of non-AUD holdings.
-- Backtesting uses modelled portfolio returns rather than separate actual and hypothetical desk P&L.
+- Desk P&L attribution is workflow-complete but uses deterministic demonstrator actual P&L rather than an approved front-office ledger.
 - Risk limits are illustrative configuration, not an approved risk appetite statement.

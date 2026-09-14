@@ -11,7 +11,7 @@ How do model choice, market liquidity, and nonlinear hedges change the risk deci
 - Treasury book: three signed Australian Government bond positions and one AUD/USD forward.
 - Derivatives overlay: three CBA/Macquarie equity options with trade-level Greeks and full revaluation.
 - Validation: five VaR/ES models, 802 common holdout days, ES calibration, and bootstrap uncertainty.
-- Reporting: 31 CSV/SQL-ready tables and approximately 9,600 rows per governed run.
+- Reporting: 34 CSV/SQL-ready tables and 10,928 rows per governed run.
 
 The deterministic market series keeps every result reproducible. Public downloads can replace it without changing the controlled pipeline.
 
@@ -45,9 +45,15 @@ The explicit approximation error provides a controlled threshold for choosing fu
 
 Historical VaR is A$32,777, while its moving-block bootstrap 95% interval is approximately A$28,756 to A$41,751. The interval spans both sides of the A$35,000 limit, showing that a point-estimate-only process can create false precision around escalation decisions.
 
+## Finding 5: PLA separates directional fit from residual P&L
+
+The P&L attribution layer creates actual, hypothetical, and risk-theoretical P&L series across 1,302 daily observations. Actual versus hypothetical P&L passes: Spearman correlation is 1.000 and mean absolute error is 1.5% of average absolute P&L.
+
+Hypothetical versus risk-theoretical P&L is more informative. It has a strong Spearman correlation of 0.952, so the factor model explains the daily direction and ranking well. It is still flagged `watch` because mean absolute error is 28.8% of average absolute P&L. That is the interview-relevant result: a market-risk analyst should not approve the factor model just because correlation is high; residual size, distribution fit, and tail capture still need review.
+
 ## Efficiency and control outcome
 
-The expanded run produces 31 tables and approximately 9,600 rows in under seven seconds of core analytics on the development machine. The vectorised scenario benchmark is more than 400 times faster than the reconciled row-loop reference. Database writes now use parameter-budgeted chunks, so adding another rolling model does not exceed SQLite's bind-variable limit.
+The expanded run produces 34 tables and 10,928 rows in under seven seconds of core analytics on the development machine. The vectorised scenario benchmark is more than 400 times faster than the reconciled row-loop reference. Database writes now use parameter-budgeted chunks, so adding another rolling model or PLA output does not exceed SQLite's bind-variable limit.
 
 The configured 130-to-10 minute workflow comparison implies a modelled 92.3% reduction in preparation time and 44 hours of monthly analyst capacity. These remain transparent planning assumptions, not realised employer savings. Accountable review, exception explanation, and escalation are retained as human controls.
 
@@ -56,4 +62,5 @@ The configured 130-to-10 minute workflow comparison implies a modelled 92.3% red
 1. Escalate the FHS and GARCH-t VaR breaches and compare conditional-model assumptions before approval.
 2. Monitor stress-scaled ES and liquidity buckets alongside one-day VaR.
 3. Use full revaluation when nonlinear approximation error exceeds the desk tolerance.
-4. Replace synthetic positions, realised option volatility, and modellability proxies with approved desk data before production use.
+4. Investigate risk-theoretical P&L residuals before relying on the factor model for desk validation.
+5. Replace synthetic positions, realised option volatility, PLA demonstrator actual P&L, and modellability proxies with approved desk data before production use.

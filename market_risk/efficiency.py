@@ -147,6 +147,7 @@ def render_management_summary(
     es_backtesting: pd.DataFrame,
     derivative_risk: pd.DataFrame,
     derivative_scenarios: pd.DataFrame,
+    pnl_attribution: pd.DataFrame,
 ) -> str:
     metrics = efficiency.set_index("metric")["value"]
     worst_stress = stress_results.sort_values("loss_aud", ascending=False).iloc[0]
@@ -164,6 +165,13 @@ def render_management_summary(
     )
     option_stress_text = (
         f"-A${abs(option_stress):,.0f}" if option_stress < 0 else f"A${option_stress:,.0f}"
+    )
+    pla_watchlist = pnl_attribution[pnl_attribution["pla_status"] != "pass"]
+    pla_headline = "; ".join(
+        f"{row['comparison']} {row['pla_status']} "
+        f"(Spearman {row['spearman_correlation']:.3f}, "
+        f"MAE {row['mean_abs_error_pct_of_avg_abs_pnl']:.1%})"
+        for _, row in pnl_attribution.iterrows()
     )
 
     model_lines = "\n".join(
@@ -185,6 +193,7 @@ def render_management_summary(
 - FRTB-inspired 97.5% ES: **A${frtb['liquidity_adjusted_es_aud']:,.0f} liquidity-adjusted** and **A${frtb['stress_scaled_es_aud']:,.0f} stress-scaled** ({frtb['stress_scaling_factor']:.3f}x scalar).
 - ES calibration closest to zero: **{best_es_model['model']}** (Z2-style statistic {best_es_model['z2_statistic']:.3f}, status {best_es_model['es_calibration_status']}).
 - Option overlay: **A${option_risk['full_revaluation_var_aud']:,.0f} full-revaluation VaR**; worst configured option P&L {option_stress_text}.
+- P&L attribution: **{len(pla_watchlist)} comparison(s) require watch/review**; {pla_headline}.
 
 ## Operating efficiency
 

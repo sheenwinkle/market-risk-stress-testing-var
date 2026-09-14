@@ -46,6 +46,9 @@ tail_uncertainty = read_report("tail_risk_uncertainty")
 derivative_positions = read_report("derivative_positions")
 derivative_scenarios = read_report("derivative_scenarios")
 derivative_risk = read_report("derivative_historical_risk")
+desk_pnl = read_report("desk_pnl_daily")
+pla_summary = read_report("pnl_attribution_summary")
+pla_betas = read_report("pnl_factor_betas")
 
 if risk_summary.empty:
     st.warning("Run `market-risk run` first to create reports.")
@@ -76,6 +79,7 @@ headline_cols[4].metric(
     treasury_tab,
     frtb_tab,
     options_tab,
+    pla_tab,
     validation_tab,
     stress_tab,
     controls_tab,
@@ -85,6 +89,7 @@ headline_cols[4].metric(
         "Treasury book",
         "FRTB & liquidity",
         "Options",
+        "P&L attribution",
         "Model validation",
         "Stress and attribution",
         "Controls and efficiency",
@@ -242,6 +247,48 @@ with options_tab:
     st.plotly_chart(fig, use_container_width=True)
     st.subheader("Approximation error by trade")
     st.dataframe(derivative_scenarios, use_container_width=True, hide_index=True)
+
+with pla_tab:
+    pla_metrics = st.columns(4)
+    if not pla_summary.empty:
+        pla_metrics[0].metric(
+            "PLA watch/review",
+            int((pla_summary["pla_status"] != "pass").sum()),
+        )
+        pla_metrics[1].metric(
+            "Best Spearman",
+            f"{pla_summary['spearman_correlation'].max():.3f}",
+        )
+        pla_metrics[2].metric(
+            "Max MAE / avg abs P&L",
+            f"{pla_summary['mean_abs_error_pct_of_avg_abs_pnl'].max():.1%}",
+        )
+        pla_metrics[3].metric(
+            "Daily P&L observations",
+            len(desk_pnl),
+        )
+    if not desk_pnl.empty:
+        desk_pnl["date"] = pd.to_datetime(desk_pnl["date"])
+        pnl_view = desk_pnl.melt(
+            id_vars="date",
+            value_vars=[
+                "actual_pnl_aud",
+                "hypothetical_pnl_aud",
+                "risk_theoretical_pnl_aud",
+            ],
+            var_name="pnl_type",
+            value_name="pnl_aud",
+        )
+        st.subheader("Actual, hypothetical, and risk-theoretical P&L")
+        fig = px.line(pnl_view, x="date", y="pnl_aud", color="pnl_type")
+        st.plotly_chart(fig, use_container_width=True)
+    left, right = st.columns(2)
+    with left:
+        st.subheader("PLA diagnostics")
+        st.dataframe(pla_summary, use_container_width=True, hide_index=True)
+    with right:
+        st.subheader("Risk-factor betas")
+        st.dataframe(pla_betas, use_container_width=True, hide_index=True)
 
 with stress_tab:
     left, right = st.columns(2)

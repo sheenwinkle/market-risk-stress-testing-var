@@ -159,3 +159,34 @@ where run_id = (
 )
 group by scenario
 order by full_revaluation_pnl_aud;
+
+-- Desk P&L attribution diagnostics for model-risk review.
+select
+    comparison,
+    observations,
+    round(spearman_correlation::numeric, 4) as spearman_correlation,
+    round(ks_statistic::numeric, 4) as ks_statistic,
+    round(mean_abs_error_aud::numeric, 2) as mean_abs_error_aud,
+    round((mean_abs_error_pct_of_avg_abs_pnl * 100)::numeric, 2) as mae_percent_of_avg_abs_pnl,
+    round(variance_ratio::numeric, 3) as variance_ratio,
+    round(left_tail_capture_ratio::numeric, 3) as left_tail_capture_ratio,
+    pla_status
+from pnl_attribution_summary
+where run_id = (
+    select run_id from run_manifest order by generated_at_utc desc limit 1
+)
+order by comparison;
+
+-- Largest daily PLA residuals.
+select
+    date,
+    round(actual_pnl_aud::numeric, 2) as actual_pnl_aud,
+    round(hypothetical_pnl_aud::numeric, 2) as hypothetical_pnl_aud,
+    round(risk_theoretical_pnl_aud::numeric, 2) as risk_theoretical_pnl_aud,
+    round(hypothetical_minus_risk_theoretical_aud::numeric, 2) as model_residual_aud
+from desk_pnl_daily
+where run_id = (
+    select run_id from run_manifest order by generated_at_utc desc limit 1
+)
+order by abs(hypothetical_minus_risk_theoretical_aud) desc
+limit 10;
