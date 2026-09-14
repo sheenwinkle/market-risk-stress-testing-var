@@ -109,6 +109,10 @@ The scope and regulatory limitations are documented in `docs/model_methodology.m
 
 The quantified management narrative is available in `docs/case_study.md`.
 
+The interview guide is available in `docs/interview_walkthrough.md`, including
+a 30-second pitch, GitHub live-demo path, personal contribution, quantified
+outputs, claim boundaries, common challenge responses, and project limitations.
+
 The public build-out plan is tracked in `docs/iteration_roadmap.md`. It mirrors
 the companion Risk Analytics Portfolio workflow: baseline the gap, add one
 role-relevant capability, quantify the result, document the evidence, then
